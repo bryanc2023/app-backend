@@ -32,11 +32,11 @@ Route::get('/test-cors', function (Request $request) {
 });
 
 Route::prefix('auth')->group(function(){
-  Route::post('register',[AuthController::class,'register'])->name('verification.verify');
+  Route::post('register',[AuthController::class,'register']);
 
-  Route::post('registerE',[AuthController::class,'registerEmpresa'])->name('verification.verify');
-  Route::post('login',[AuthController::class,'login'])->name('login');
-  Route::post('loginE',[AuthController::class,'loginEmpresa'])->name('login');
+  Route::post('registerE',[AuthController::class,'registerEmpresa']);
+  Route::post('login',[AuthController::class,'login']);
+  Route::post('loginE',[AuthController::class,'loginEmpresa']);
   // Ruta de verificación de correo electrónico sin autenticación
   Route::get('/verifyEmail/{id}/{hash}', [AuthController::class, 'verify'])->name('verification.verify');
 
