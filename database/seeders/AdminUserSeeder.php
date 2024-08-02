@@ -18,9 +18,9 @@ class AdminUserSeeder extends Seeder
     {
         DB::table('users')->insert([
             'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'email' => 'adpostulate08@gmail.com',
             'email_verified_at' => now(),
-            'password' => Hash::make('adminpassword'), // Asegúrate de usar una contraseña segura
+            'password' => Hash::make('postulateadministrador2024.'), // Asegúrate de usar una contraseña segura
             'remember_token' => Str::random(10),
             'created_at' => now(),
             'updated_at' => now(),
