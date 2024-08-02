@@ -103,6 +103,7 @@ class OfertaController extends Controller
 
         return response()->json(['message' => 'Oferta creado exitosamente', 'oferta' => $oferta], 201);
     }
+    
     public function updateOferta(Request $request, $id)
     {
         $oferta = Oferta::where('id_oferta', $id)->first();
