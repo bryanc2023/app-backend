@@ -2,8 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 class CreateUsersTable extends Migration
@@ -26,18 +24,6 @@ class CreateUsersTable extends Migration
             $table->timestamps();
             $table->string('reset_password_token', 250)->nullable();
         });
-
-        // Insertar un usuario inicial
-        DB::table('users')->insert([
-            'name' => 'Admin',
-            'email' => 'adpostulate08@gmail.com',
-            'email_verified_at' => now(),
-            'password' => Hash::make('postulateadministrador2024.'),
-            'created_at' => now(),
-            'updated_at' => now(),
-            'role_id' => 1, // Asegúrate de que tienes esta columna en tu tabla
-            
-        ]);
     }
 
     /**
