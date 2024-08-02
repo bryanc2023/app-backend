@@ -36,6 +36,7 @@ class CreateUsersTable extends Migration
             'created_at' => now(),
             'updated_at' => now(),
             'role_id' => 1, // Asegúrate de que tienes esta columna en tu tabla
+            
         ]);
     }
 
