@@ -40,6 +40,7 @@ class EmpresaGestoraSeeder extends Seeder
             'descripcion' => 'Descripción de la empresa gestora',
             'logo' => 'https://firebasestorage.googleapis.com/v0/b/proajob-486e1.appspot.com/o/logos%2Fimages%20(1).jfif?alt=media&token=fdf3ed9c-9e3c-4505-9465-665e3cfe9d9f',
             'cantidad_empleados' => 50,
+            
         ]);
     }
 }
