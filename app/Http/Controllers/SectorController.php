@@ -10,7 +10,7 @@ class SectorController extends Controller
 {
     public function getSectores()
     {
-        $sectores = SectorEconomico::distinct()->pluck('sector');
+        $sectores= SectorEconomico::distinct()->pluck('sector');
         
         return response()->json([
             'sectores' => $sectores,
@@ -19,6 +19,7 @@ class SectorController extends Controller
 
     public function getDivisionSector($sector)
     {
+        
         $textoSinTildes = StringHelper::removeAccents($sector);
         // Obtener las divisiones con el sector normalizado
         $divisiones = SectorEconomico::whereRaw('LOWER(REPLACE(sector, " ", "")) = LOWER(REPLACE(?, " ", ""))', [$textoSinTildes])
