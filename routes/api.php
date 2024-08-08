@@ -160,6 +160,9 @@ Route::put('/experiencia/{id}', [PostulanteController::class, 'updateExperiencia
 Route::get('/postulanteByName', [PostulanteController::class, 'searchPostulante']);
 Route::get('/postulanteData/{id}', [PostulanteController::class, 'getPostulanteData']);
 Route::get('/postulante/{id_postulante}', [PostulanteController::class, 'getPostulanteById']);
+Route::post('/postulante/{id}/updateProfilePicture', [PostulanteController::class, 'updateProfilePicture']);
+
+
 
 
 
@@ -209,6 +212,9 @@ Route::get('/configuraciones', [ConfiguracionController::class, 'index']);
 Route::post('/configuraciones', [ConfiguracionController::class, 'store']);
 Route::post('/configuraciones/{id}/activate', [ConfiguracionController::class, 'activate']);
 Route::get('/configuracion/activa', [ConfiguracionController::class, 'getActiveConfiguration']);
+Route::get('/admin/configuracion', [ConfiguracionController::class, 'edit'])->name('configuracion.edit');
+Route::post('/admin/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+
 
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/roles', [UserController::class, 'index2']);
