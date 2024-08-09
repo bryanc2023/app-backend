@@ -837,6 +837,10 @@ public function updateProfilePicture(Request $request, $id_Postulante)
     return response()->json(['message' => 'Foto de perfil actualizada correctamente.', 'postulante' => $postulante], 200);
 }
 
+    public function updateProfile () {
+        return response()->json('xd');
+    }
+
 
 
 }
