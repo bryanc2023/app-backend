@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\configuracion;
+use App\Models\Configuracion;
 
 class ConfiguracionController extends Controller
 {
     public function index()
     {
-        $configuraciones = configuracion::all();
+        $configuraciones = Configuracion::all();
         return response()->json($configuraciones);
     }
+
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -20,6 +21,7 @@ class ConfiguracionController extends Controller
             'valor_prioridad_alta' => 'required|integer',
             'valor_prioridad_media' => 'required|integer',
             'valor_prioridad_baja' => 'required|integer',
+            'terminos_condiciones' => 'nullable|string',
         ]);
 
         // Verificar si ya existe alguna configuración en la base de datos
@@ -34,19 +36,19 @@ class ConfiguracionController extends Controller
     }
 
     public function activate(Request $request, $id)
-{
-    // Desactivar todas las configuraciones
-    Configuracion::where('vigencia', true)->update(['vigencia' => false]);
+    {
+        // Desactivar todas las configuraciones
+        Configuracion::where('vigencia', true)->update(['vigencia' => false]);
 
-    // Activar la configuración específica
-    $configuracion = Configuracion::findOrFail($id);
-    $configuracion->vigencia = true;
-    $configuracion->save();
+        // Activar la configuración específica
+        $configuracion = Configuracion::findOrFail($id);
+        $configuracion->vigencia = true;
+        $configuracion->save();
 
-    return response()->json(['message' => 'Configuración activada correctamente', 'configuracion' => $configuracion], 200);
-}
+        return response()->json(['message' => 'Configuración activada correctamente', 'configuracion' => $configuracion], 200);
+    }
 
-public function getActiveConfiguration()
+    public function getActiveConfiguration()
     {
         $configuracion = Configuracion::where('vigencia', true)->first();
         if ($configuracion) {
@@ -56,4 +58,26 @@ public function getActiveConfiguration()
         }
     }
 
+    public function edit()
+    {
+        $configuracion = Configuracion::first();
+        return view('admin.configuracion.edit', compact('configuracion'));
+    }
+
+    public function update(Request $request)
+    {
+        $request->validate([
+            'dias_max_edicion' => 'required|integer',
+            'dias_max_eliminacion' => 'required|integer',
+            'valor_prioridad_alta' => 'required|integer',
+            'valor_prioridad_media' => 'required|integer',
+            'valor_prioridad_baja' => 'required|integer',
+            'terminos_condiciones' => 'required|string',
+        ]);
+
+        $configuracion = Configuracion::first();
+        $configuracion->update($request->all());
+
+        return redirect()->route('configuracion.edit')->with('success', 'Configuración actualizada correctamente.');
+    }
 }

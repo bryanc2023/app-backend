@@ -816,6 +816,33 @@ public function getPostulanteById($id_postulante)
     }
 }
 
+public function updateProfilePicture(Request $request, $id_Postulante)
+{
+    // Validar que la URL de la foto esté presente en la solicitud
+    $request->validate([
+        'foto' => 'required|string',
+    ]);
+
+    // Obtener el postulante por el id_postulante
+    $postulante = Postulante::find($id_Postulante);
+
+    if (!$postulante) {
+        return response()->json(['error' => 'No se encontró el postulante.'], 404);
+    }
+
+    // Actualizar el campo foto del postulante con la nueva URL
+    $postulante->foto = $request->input('foto');
+    $postulante->save();
+
+    return response()->json(['message' => 'Foto de perfil actualizada correctamente.', 'postulante' => $postulante], 200);
+}
+
+    public function updateProfile () {
+        return response()->json('xd');
+    }
+
+
+
 }
 
 

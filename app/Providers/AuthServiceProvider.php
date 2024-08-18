@@ -29,11 +29,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 //correo direccion
-        $env = "http://localhost:5173";
-        if(env('APP_ENV') == "env") {
-            $env = "https://tenocode.com";
-        }
-
+        $env = env('FRONTEND_URL');
         // Usar la URL base dentro del closure
         VerifyEmail::toMailUsing(function ($notifiable, $url) use ($env) {
 

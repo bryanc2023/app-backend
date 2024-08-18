@@ -220,5 +220,31 @@ class EmpresaController extends Controller
             return response()->json(['message' => 'Error al obtener la empresa', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function updateLogo(Request $request, $id_empresa)
+    {
+        try {
+            // Encuentra la empresa por su ID
+            $empresa = Empresa::find($id_empresa);
+
+            if (!$empresa) {
+                return response()->json(['message' => 'Empresa no encontrada'], 404);
+            }
+
+            // Validar la solicitud para asegurarse de que el logo está presente
+            $request->validate([
+                'logo' => 'required|url'
+            ]);
+
+            // Actualizar el logo de la empresa con la URL proporcionada
+            $empresa->logo = $request->input('logo');
+            $empresa->save();
+
+            return response()->json(['message' => 'Logo actualizado correctamente', 'empresa' => $empresa], 200);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar el logo de la empresa: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al actualizar el logo', 'error' => $e->getMessage()], 500);
+        }
+    }
  }
 

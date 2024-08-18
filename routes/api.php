@@ -151,7 +151,6 @@ Route::put('update-oferta/{id}', [OfertaController::class, 'updateOferta']);
 Route::delete('/oferta/{id}', [OfertaController::class, 'deleteOferta']);
 Route::put('/updatePostulanteById/{id}', [PostulanteController::class, 'updatePostulanteByIdUser']);
 Route::put('/updateIdioma/{id_postulante}/{id_idioma}', [IdiomaController::class, 'updateIdioma']);
-Route::put('/updatePostulanteById/{id}', [PostulanteController::class, 'updatePostulanteByIdUser']);
 Route::get('postulante/{id}/cv', [PostulanteController::class, 'getCV']);
 Route::post('postulante-red', [PostulanteRedController::class, 'redPostulante']);
 Route::get('postulante-red/{id_postulante}', [PostulanteRedController::class, 'getPostulanteReds']);
@@ -160,7 +159,8 @@ Route::put('/experiencia/{id}', [PostulanteController::class, 'updateExperiencia
 Route::get('/postulanteByName', [PostulanteController::class, 'searchPostulante']);
 Route::get('/postulanteData/{id}', [PostulanteController::class, 'getPostulanteData']);
 Route::get('/postulante/{id_postulante}', [PostulanteController::class, 'getPostulanteById']);
-
+Route::post('/postulante/{id}/updateProfilePicture', [PostulanteController::class, 'updateProfilePicture']);
+Route::post('postulante', [PostulanteController::class, 'updateProfile']);
 
 
 Route::put('/formacion_academica/update', [PostulanteController::class, 'updateFormacionAcademica']);
@@ -178,6 +178,8 @@ Route::get('/ubicacionesG', [EmpresaGestoraController::class, 'getUbicaciones'])
 Route::get('/postulantes-por-ubicacion', [EmpresaGestoraController::class, 'getPostulantesPorUbicacion']);
 Route::get('/postulantes-por-area', [EmpresaGestoraController::class, 'getPostulantesPorArea']);
 Route::get('/postulantes-por-genero', [EmpresaGestoraController::class, 'getPostulantesPorGenero']);
+Route::post('/empresa/{id}/updateLogo', [EmpresaController::class, 'updateLogo']);
+
 
 
 
@@ -209,6 +211,9 @@ Route::get('/configuraciones', [ConfiguracionController::class, 'index']);
 Route::post('/configuraciones', [ConfiguracionController::class, 'store']);
 Route::post('/configuraciones/{id}/activate', [ConfiguracionController::class, 'activate']);
 Route::get('/configuracion/activa', [ConfiguracionController::class, 'getActiveConfiguration']);
+Route::get('/admin/configuracion', [ConfiguracionController::class, 'edit'])->name('configuracion.edit');
+Route::post('/admin/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+
 
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/roles', [UserController::class, 'index2']);
