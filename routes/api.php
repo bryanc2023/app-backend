@@ -229,6 +229,6 @@ Route::get('/criteriosAll', [CriterioController::class, 'index']);
 Route::middleware('auth:api')->group(function () {
   // Aquí van las rutas protegidas por JWT
 
- 
+Route::middleware('auth:api')->get('/user/registration-status', [AuthController::class, 'checkRegistrationStatus']);
   
 });

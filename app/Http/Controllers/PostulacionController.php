@@ -317,8 +317,9 @@ class PostulacionController extends Controller
             $postulaciones = Postulacion::whereHas('oferta', function ($query) use ($empresa) {
                 $query->where('id_empresa', $empresa->id_empresa);
             })
-                ->with(['oferta', 'postulante'])
+                ->with(['oferta', 'postulante', 'postulante.formapro', 'postulante.formaciones'])
                 ->get();
+              
 
             // Agrupar las postulaciones por oferta y ordenar postulantes por total_evaluacion descendente
             $groupedPostulaciones = $postulaciones->groupBy('id_oferta')->map(function ($item) {
@@ -346,6 +347,21 @@ class PostulacionController extends Controller
                             'total_evaluacion' => $postulacion->total_evaluacion,
                             'fecha'=> $postulacion->fecha_postulacion,
                             'estado_postulacion'=> $postulacion->estado_postulacion,
+                            'formaciones' => $postulacion->postulante->formapro->map(function ($formacion) {
+                                return [
+                                    'puesto' => $formacion->puesto,
+                                    'area'=> $formacion->area,
+                                    'empresa'=> $formacion->empresa,
+                                    'anios_e'=> $formacion->anios_e,
+                                    'mes_e'=> $formacion->mes_e,
+                                ];
+                            }),
+                            'titulos' => $postulacion->postulante->formaciones->map(function ($titulo) {
+                                return [
+                                    'institucion' => $titulo->institucion,
+                                    'titulo_acreditado' => $titulo->titulo_acreditado,
+                                ];
+                            }),
                         ];
                     })->sortByDesc('total_evaluacion')->values()->all(),
                 ];
