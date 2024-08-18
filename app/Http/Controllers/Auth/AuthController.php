@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\VerifyEmailCustom;
 use App\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Auth;
+
 
 
 class AuthController extends Controller
@@ -141,6 +143,23 @@ class AuthController extends Controller
         $request->user()->sendEmailVerificationNotification();
 
         return response()->json(['message' => 'Verification email resent'], 200);
+    }
+
+    /**
+     * Verifica si el usuario ha completado su registro.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkRegistrationStatus()
+    {
+        $user = Auth::user();
+
+        // Verificar si el usuario ha verificado su email y si ha completado el primer login (registro completo)
+        $isProfileComplete = $user->email_verified_at !== null && $user->first_login_at !== null;
+
+        return response()->json([
+            'profileCompleted' => $isProfileComplete,
+        ]);
     }
     
 }
