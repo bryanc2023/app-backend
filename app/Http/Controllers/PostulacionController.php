@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PersonaFormacionPro;
 use App\Models\Empresa;
 use App\Models\Oferta;
+use App\Models\configuracion;
 use App\Models\Postulacion;
 use App\Models\Postulante;
 use App\Models\Titulo;
@@ -25,13 +26,21 @@ class PostulacionController extends Controller
                 'id_postulante' => 'required|integer',
                 'id_oferta' => 'required|integer|exists:titulo,id',
                 'sueldo' => 'nullable|integer',
+                'respuestas' => 'nullable|array',
+                'respuestas.*.id_pregunta' => 'required_with:respuestas|integer|exists:pregunta,id',
+                'respuestas.*.respuesta' => 'required_with:respuestas|string|max:300',
             ]);
 
+            $configuracion = configuracion::where('vigencia', 1)->firstOrFail();
+            $valorPrioridadAlta = $configuracion->valor_prioridad_alta;
+            $valorPrioridadMedia = $configuracion->valor_prioridad_media;
+            $valorPrioridadBaja = $configuracion->valor_prioridad_baja;
+    
             // Buscar el id de usuario de la empresa
             $oferta = Oferta::findOrFail($request->id_oferta);
             $empresa = Empresa::findOrFail($oferta->id_empresa);
             $usuario = User::findOrFail($empresa->id_usuario);
-          
+
             $postulante = Postulante::where('id_usuario', $request->id_postulante)->first();
             if (!$postulante) {
                 return response()->json(['error' => 'Postulante no encontrado'], 404);
@@ -61,11 +70,11 @@ class PostulacionController extends Controller
                             $postulacion->sueldo_deseado = $request->sueldo;
                             if ($request->sueldo <= $oferta->sueldo) {
                                 if ($criterio->pivot->prioridad == 1) {
-                                    $matchingSueldo =  $matchingSueldo + 3;
+                                    $matchingSueldo =  $matchingSueldo + $valorPrioridadAlta;
                                 } else if ($criterio->pivot->prioridad == 2) {
-                                    $matchingSueldo =  $matchingSueldo + 3;
+                                    $matchingSueldo =  $matchingSueldo + $valorPrioridadMedia;
                                 } else {
-                                    $matchingSueldo++;
+                                    $matchingSueldo =  $matchingSueldo + $valorPrioridadBaja;
                                 }
                             }
 
@@ -76,11 +85,11 @@ class PostulacionController extends Controller
                                     foreach ($oferta->expe as $expe) {
                                         if ($titulo->id == $expe->id) {
                                             if ($criterio->pivot->prioridad == 1) {
-                                                $matchingTitlesCount =  $matchingTitlesCount + 3;
+                                                $matchingTitlesCount =  $matchingTitlesCount + $valorPrioridadAlta;
                                             } else if ($criterio->pivot->prioridad == 2) {
-                                                $matchingTitlesCount =  $matchingTitlesCount + 3;
+                                                $matchingTitlesCount =  $matchingTitlesCount + $valorPrioridadMedia;
                                             } else {
-                                                $matchingTitlesCount++;
+                                                $matchingTitlesCount =  $matchingTitlesCount + $valorPrioridadBaja;
                                             }
                                         }
                                     }
@@ -97,11 +106,11 @@ class PostulacionController extends Controller
                                     // Verificar cada formación profesional contra los criterios de la oferta
                                     if ($areaId == $oferta->areas->id && $formacion->anios_e >= $oferta->experiencia) {
                                         if ($criterio->pivot->prioridad == 1) {
-                                            $matchingFormacionesCount =  $matchingFormacionesCount + 3;
+                                            $matchingFormacionesCount =  $matchingFormacionesCount + $valorPrioridadAlta;
                                         } else if ($criterio->pivot->prioridad == 2) {
-                                            $matchingFormacionesCount =  $matchingFormacionesCount + 3;
+                                            $matchingFormacionesCount =  $matchingFormacionesCount + $valorPrioridadMedia;
                                         } else {
-                                            $matchingFormacionesCount++;
+                                            $matchingFormacionesCount =  $matchingFormacionesCount + $valorPrioridadBaja;
                                         }
                                     }
                                 }
@@ -110,22 +119,22 @@ class PostulacionController extends Controller
                         case 'Estado Civil':
                             if ($postulante->estado_civil == $criterio->pivot->valor) {
                                 if ($criterio->pivot->prioridad == 1) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadAlta;
                                 } else if ($criterio->pivot->prioridad == 2) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadMedia;
                                 } else {
-                                    $matchingCriteriaCount++;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadBaja;
                                 }
                             }
                             break;
                         case 'Género':
                             if ($postulante->genero == $criterio->pivot->valor) {
                                 if ($criterio->pivot->prioridad == 1) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadAlta;
                                 } else if ($criterio->pivot->prioridad == 2) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadMedia;
                                 } else {
-                                    $matchingCriteriaCount++;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadBaja;
                                 }
                             }
                             break;
@@ -135,11 +144,11 @@ class PostulacionController extends Controller
                                     list($criterioId, $criterioValor) = explode(',', $criterio->pivot->valor);
                                     if ($idioma->idioma->id == $criterioId) {
                                         if ($criterio->pivot->prioridad == 1) {
-                                            $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                            $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadAlta;
                                         } else if ($criterio->pivot->prioridad == 2) {
-                                            $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                            $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadMedia;
                                         } else {
-                                            $matchingCriteriaCount++;
+                                            $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadBaja;
                                         }
                                     }
                                 }
@@ -157,11 +166,11 @@ class PostulacionController extends Controller
                             }
                             if ($edad == $criterioId) {
                                 if ($criterio->pivot->prioridad == 1) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadAlta;
                                 } else if ($criterio->pivot->prioridad == 2) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadMedia;
                                 } else {
-                                    $matchingCriteriaCount++;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadBaja;
                                 }
                             }
                             break;
@@ -169,11 +178,11 @@ class PostulacionController extends Controller
                             list($ubiId, $ubiValor) = explode(',', $criterio->pivot->valor);
                             if ($postulante->ubicacion->id == $ubiId) {
                                 if ($criterio->pivot->prioridad == 1) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadAlta;
                                 } else if ($criterio->pivot->prioridad == 2) {
-                                    $matchingCriteriaCount =  $matchingCriteriaCount + 3;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadMedia;
                                 } else {
-                                    $matchingCriteriaCount++;
+                                    $matchingCriteriaCount =  $matchingCriteriaCount  + $valorPrioridadBaja;
                                 }
                             }
                             break;
@@ -214,14 +223,18 @@ class PostulacionController extends Controller
 
 
             $postulacion->total_evaluacion = $matchingTitlesCount + $matchingCriteriaCount + $matchingFormacionesCount + $matchingSueldo;
-
+            // Guardar las respuestas en el campo respuestas si existen
+            if ($request->has('respuestas')) {
+                $postulacion->respuestas = json_encode($request->respuestas);
+            }
             $postulacion->save();
             $usuario->notify(new Notificaciones(
-                'Nueva postulacion', 
-                'El postulante ' . $postulante->nombres .' '. $postulante->apellidos, ' ha postulado a la oferta ' . $oferta->cargo, 
-                $postulante->nombres.' '. $postulante->apellidos
+                'Nueva postulacion',
+                'El postulante ' . $postulante->nombres . ' ' . $postulante->apellidos,
+                ' ha postulado a la oferta ' . $oferta->cargo,
+                $postulante->nombres . ' ' . $postulante->apellidos
             ));
-            
+
             // Devolver la respuesta exitosa
             return response()->json([
                 'message' => 'Postulacion registrada exitosamente',
@@ -250,60 +263,60 @@ class PostulacionController extends Controller
         return response()->json(['message' => 'Postulante:', 'Postulante' => $postulante], 201);
     }
 
-    
+
 
     public function getPostulacionPostulante($id, Request $request)
-{
-    try {
-        // Buscar el postulante por ID de usuario
-        $postulante = Postulante::where('id_usuario', $id)->first();
-        if (!$postulante) {
-            return response()->json(['error' => 'Postulante no encontrado'], 404);
-        }
-
-        // Obtener las postulaciones del postulante con las relaciones 'oferta' y 'empresa' cargadas
-        $query = Postulacion::where('id_postulante', $postulante->id_postulante)
-                            ->with(['oferta', 'oferta.empresa']);
-
-        // Filtrar por fecha si se proporciona en la consulta
-        if ($request->has('fecha')) {
-            $fechaPostulacion = $request->input('fecha');
-            $query->whereDate('fecha_postulacion', '=', $fechaPostulacion);
-        }
-
-        $postulaciones = $query->get();
-
-        $data = [];
-
-        // Recorrer cada postulación para obtener la ubicación asociada
-        foreach ($postulaciones as $postulacion) {
-            $idUbicacion = $postulacion->oferta->empresa->id_ubicacion;
-
-            // Obtener la ubicación usando el find
-            $ubicacion = Ubicacion::find($idUbicacion);
-
-            // Verificar si la ubicación existe y no está repetida en la respuesta
-            if ($ubicacion) {
-                // Agrupar la postulación con su ubicación correspondiente
-                $postulacionConUbicacion = [
-                    'postulacion' => $postulacion,
-                    'ubicacion' => $ubicacion,
-                ];
-
-                // Agregar esta información al arreglo de datos
-                $data[] = $postulacionConUbicacion;
+    {
+        try {
+            // Buscar el postulante por ID de usuario
+            $postulante = Postulante::where('id_usuario', $id)->first();
+            if (!$postulante) {
+                return response()->json(['error' => 'Postulante no encontrado'], 404);
             }
-        }
 
-        // Retornar la respuesta JSON con las postulaciones y ubicaciones alineadas
-        return response()->json(['postulaciones' => $data]);
-    } catch (\Throwable $th) {
-        return response()->json([
-            'message' => 'Error al obtener las postulaciones del postulante',
-            'error' => $th->getMessage()
-        ], 500);
+            // Obtener las postulaciones del postulante con las relaciones 'oferta' y 'empresa' cargadas
+            $query = Postulacion::where('id_postulante', $postulante->id_postulante)
+                ->with(['oferta', 'oferta.empresa']);
+
+            // Filtrar por fecha si se proporciona en la consulta
+            if ($request->has('fecha')) {
+                $fechaPostulacion = $request->input('fecha');
+                $query->whereDate('fecha_postulacion', '=', $fechaPostulacion);
+            }
+
+            $postulaciones = $query->get();
+
+            $data = [];
+
+            // Recorrer cada postulación para obtener la ubicación asociada
+            foreach ($postulaciones as $postulacion) {
+                $idUbicacion = $postulacion->oferta->empresa->id_ubicacion;
+
+                // Obtener la ubicación usando el find
+                $ubicacion = Ubicacion::find($idUbicacion);
+
+                // Verificar si la ubicación existe y no está repetida en la respuesta
+                if ($ubicacion) {
+                    // Agrupar la postulación con su ubicación correspondiente
+                    $postulacionConUbicacion = [
+                        'postulacion' => $postulacion,
+                        'ubicacion' => $ubicacion,
+                    ];
+
+                    // Agregar esta información al arreglo de datos
+                    $data[] = $postulacionConUbicacion;
+                }
+            }
+
+            // Retornar la respuesta JSON con las postulaciones y ubicaciones alineadas
+            return response()->json(['postulaciones' => $data]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error al obtener las postulaciones del postulante',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
-}
 
     public function getPostulacionEmpresa($id)
     {
@@ -319,7 +332,7 @@ class PostulacionController extends Controller
             })
                 ->with(['oferta', 'postulante', 'postulante.formapro', 'postulante.formaciones'])
                 ->get();
-              
+
 
             // Agrupar las postulaciones por oferta y ordenar postulantes por total_evaluacion descendente
             $groupedPostulaciones = $postulaciones->groupBy('id_oferta')->map(function ($item) {
@@ -327,10 +340,10 @@ class PostulacionController extends Controller
                     'id_oferta' => $item->first()->oferta->id_oferta,
                     'id_empresa' => $item->first()->oferta->id_empresa,
                     'cargo' => $item->first()->oferta->cargo,
-                    'fecha_oferta'=>$item->first()->oferta->fecha_publi,
-                    'area'=>$item->first()->oferta->id_area,
-                    'carga_horaria'=>$item->first()->oferta->carga_horaria,
-                    'estado'=>$item->first()->oferta->estado,
+                    'fecha_oferta' => $item->first()->oferta->fecha_publi,
+                    'area' => $item->first()->oferta->id_area,
+                    'carga_horaria' => $item->first()->oferta->carga_horaria,
+                    'estado' => $item->first()->oferta->estado,
                     'postulantes' => $item->map(function ($postulacion) {
                         return [
                             'id_postulante' => $postulacion->postulante->id_postulante,
@@ -345,15 +358,16 @@ class PostulacionController extends Controller
                             'foto' => $postulacion->postulante->foto,
                             'cv' => $postulacion->postulante->cv,
                             'total_evaluacion' => $postulacion->total_evaluacion,
-                            'fecha'=> $postulacion->fecha_postulacion,
-                            'estado_postulacion'=> $postulacion->estado_postulacion,
+                            'fecha' => $postulacion->fecha_postulacion,
+                            'estado_postulacion' => $postulacion->estado_postulacion,
+                            'respuestas' => json_decode($postulacion->respuestas, true), 
                             'formaciones' => $postulacion->postulante->formapro->map(function ($formacion) {
                                 return [
                                     'puesto' => $formacion->puesto,
-                                    'area'=> $formacion->area,
-                                    'empresa'=> $formacion->empresa,
-                                    'anios_e'=> $formacion->anios_e,
-                                    'mes_e'=> $formacion->mes_e,
+                                    'area' => $formacion->area,
+                                    'empresa' => $formacion->empresa,
+                                    'anios_e' => $formacion->anios_e,
+                                    'mes_e' => $formacion->mes_e,
                                 ];
                             }),
                             'titulos' => $postulacion->postulante->formaciones->map(function ($titulo) {
@@ -384,54 +398,54 @@ class PostulacionController extends Controller
             if (!$empresa) {
                 return response()->json(['error' => 'Empresa no encontrada'], 404);
             }
-    
+
             // Obtener las ofertas de la empresa
             $ofertasQuery = Oferta::where('id_empresa', $empresa->id_empresa);
-    
+
             if ($request->has('fechaInicio') && $request->has('fechaFin') && !empty($request->input('fechaInicio')) && !empty($request->input('fechaFin'))) {
                 $fechaInicio = $request->input('fechaInicio');
                 $fechaFin = $request->input('fechaFin');
-                
+
                 // Ajustar fechas de inicio y fin al primer y último día del mes respectivo
                 $startOfMonth = date('Y-m-01', strtotime($fechaInicio));
                 $endOfMonth = date('Y-m-t', strtotime($fechaFin));
                 $ofertasQuery->whereBetween('fecha_publi', [$startOfMonth, $endOfMonth]);
             }
-    
+
             if ($request->has('area')) {
                 $area = $request->input('area');
                 $ofertasQuery->where('id_area', $area);
             }
-    
+
             if ($request->has('estado')) {
                 $estado = $request->input('estado');
                 $ofertasQuery->where('estado', $estado);
             }
-    
+
             $ofertas = $ofertasQuery->get();
-           
-    
+
+
             // Inicializar arrays para contar postulantes por estado
             $estadoCounts = [
                 'P' => 0,
                 'A' => 0,
                 'R' => 0,
             ];
-    
+
             // Preparar estructura para almacenar resultados
             $result = [];
-    
+
             foreach ($ofertas as $oferta) {
                 // Obtener las postulaciones de la oferta con las relaciones 'postulantes'
                 $postulaciones = Postulacion::where('id_oferta', $oferta->id_oferta)
                     ->with('postulante')
                     ->get();
-    
+
                 // Reiniciar los conteos por estado para esta oferta
                 $estadoCounts['P'] = 0;
                 $estadoCounts['A'] = 0;
                 $estadoCounts['R'] = 0;
-    
+
                 // Contar la cantidad de personas por estado ('P', 'A', 'R')
                 foreach ($postulaciones as $postulacion) {
                     switch ($postulacion->estado_postulacion) {
@@ -448,7 +462,7 @@ class PostulacionController extends Controller
                             break;
                     }
                 }
-    
+
                 // Agregar la oferta con el conteo de postulantes y estado al resultado
                 $result[] = [
                     'id_oferta' => $oferta->id_oferta,
@@ -463,7 +477,7 @@ class PostulacionController extends Controller
                     ],
                 ];
             }
-    
+
             // Retornar la respuesta JSON con las ofertas y el estado de las postulaciones
             return response()->json(['postulaciones' => $result]);
         } catch (\Throwable $th) {
@@ -473,7 +487,7 @@ class PostulacionController extends Controller
             ], 500);
         }
     }
-    
+
     public function actualizarPostulaciones(Request $request)
     {
         // Validación de datos recibidos
@@ -482,12 +496,12 @@ class PostulacionController extends Controller
             'id_postulante' => 'required|integer',
             'comentario' => 'required|string|max:255',
         ]);
-    
+
         // Obtener los datos del request
         $id_oferta = $request->input('id_oferta');
         $id_postulante = $request->input('id_postulante');
         $comentario = $request->input('comentario');
-    
+
         try {
             // Cambiar estado y comentario para todas las postulaciones de la oferta excepto la del postulante seleccionado
             $oferta = Oferta::find($id_oferta);
@@ -497,7 +511,7 @@ class PostulacionController extends Controller
             } else {
                 return response()->json(['message' => 'Oferta no encontrada'], 404);
             }
-    
+
             Postulacion::where('id_oferta', $id_oferta)
                 ->where('id_postulante', '!=', $id_postulante)
                 ->update([
@@ -505,21 +519,21 @@ class PostulacionController extends Controller
                     'comentario' => 'Ha sido seleccionado otro candidato',
                     'fecha_revision' => Carbon::now(),
                 ]);
-    
+
             // Cambiar estado y guardar comentario para la postulación del postulante seleccionado
             $postulacion = Postulacion::where('id_oferta', $id_oferta)
                 ->where('id_postulante', $id_postulante)
                 ->first();
-    
+
             if ($postulacion) {
                 $postulacion->estado_postulacion = 'A';
                 $postulacion->comentario = $comentario;
                 $postulacion->fecha_revision = Carbon::now();
-    
+
                 try {
                     $postulacion->save();
                     Log::info("Postulacion guardada exitosamente");
-    
+
                     // Crear notificación para el postulante seleccionado
                     $postulante = Postulante::findOrFail($id_postulante);
                     $usuario = User::findOrFail($postulante->id_usuario);
@@ -528,10 +542,10 @@ class PostulacionController extends Controller
                     $usuario->notify(new Notificaciones(
                         'Postulación Aceptada',
                         'Has sido seleccionado para la oferta ' . $oferta->cargo . ' de la empresa ' . $empresa->nombre_comercial,
-                         $postulante->nombres . ' ' . $postulante->apellidos
-                        
+                        $postulante->nombres . ' ' . $postulante->apellidos
+
                     ));
-    
+
                     // Console log
                     Log::info("Notificación creada para el usuario: " . $usuario->email);
                 } catch (\Exception $e) {
@@ -540,35 +554,34 @@ class PostulacionController extends Controller
             } else {
                 return response()->json(['message' => 'Postulación no encontrada'], 404);
             }
-    
+
             return response()->json(['message' => 'Postulaciones actualizadas correctamente'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al actualizar las postulaciones', 'error' => $e->getMessage()], 500);
         }
     }
-    
 
 
-public function existePostulacionAprobadaParaOferta(Request $request)
-{
-    // Validar datos recibidos
-    $request->validate([
-        'id_oferta' => 'required|integer',
-    ]);
 
-    // Obtener el ID de la oferta desde la solicitud
-    $id_oferta = $request->input('id_oferta');
+    public function existePostulacionAprobadaParaOferta(Request $request)
+    {
+        // Validar datos recibidos
+        $request->validate([
+            'id_oferta' => 'required|integer',
+        ]);
 
-    try {
-        // Buscar si existe alguna postulación con estado 'A' para la oferta dada
-        $existeAprobado = Postulacion::where('id_oferta', $id_oferta)
-            ->where('estado_postulacion', 'A')
-            ->exists();
+        // Obtener el ID de la oferta desde la solicitud
+        $id_oferta = $request->input('id_oferta');
 
-        return response()->json(['existe_aprobado' => $existeAprobado]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Error al verificar la postulación aprobada', 'message' => $e->getMessage()], 500);
+        try {
+            // Buscar si existe alguna postulación con estado 'A' para la oferta dada
+            $existeAprobado = Postulacion::where('id_oferta', $id_oferta)
+                ->where('estado_postulacion', 'A')
+                ->exists();
+
+            return response()->json(['existe_aprobado' => $existeAprobado]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al verificar la postulación aprobada', 'message' => $e->getMessage()], 500);
+        }
     }
-}
-
 }
