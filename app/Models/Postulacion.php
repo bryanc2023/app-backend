@@ -22,7 +22,11 @@ class Postulacion extends Model
         'estado_postulacion',
         'total_evaluacion',
         'sueldo_deseado',
-        // Puedes agregar más campos si es necesario
+      'respuestas', // Asegúrate de que el campo respuestas es fillable
+    ];
+
+    protected $casts = [
+        'respuestas' => 'array', // Esto castea el JSON a un array automáticamente
     ];
 
       // Este método indica que la clave primaria está compuesta por estos dos campos

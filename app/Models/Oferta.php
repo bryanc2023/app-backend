@@ -52,6 +52,10 @@ public function areas()
     return $this->belongsTo(AreaTrabajo::class, 'id_area');
 }
 
+public function preguntas()
+{
+    return $this->hasMany(pregunta::class, 'id_oferta');
+}
 public function expe()
     {
         return $this->belongsToMany(Titulo::class, 'educacion_requerida', 'id_oferta', 'id_titulo')

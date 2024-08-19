@@ -6,6 +6,7 @@ use App\Models\CriterioOferta;
 use App\Models\EducacionRequerida;
 use App\Models\Empresa;
 use App\Models\Oferta;
+use App\Models\pregunta;
 use App\Models\Ubicacion;
 use App\Models\User;
 use Carbon\Carbon;
@@ -43,6 +44,8 @@ class OfertaController extends Controller
             'criterios.*.valor' => 'string|nullable|max:255',
             'criterios.*.prioridad' => 'integer|between:1,3',
             'usuario' => 'required|integer',
+            'preguntas' => 'nullable|array',
+            'preguntas.*' => 'string|max:400',
         ]);
         // Buscar el usuario por ID
         $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
@@ -99,11 +102,20 @@ class OfertaController extends Controller
             }
         }
 
+        // Guardar las preguntas si existen
+        if (!empty($validatedData['preguntas'])) {
+            foreach ($validatedData['preguntas'] as $preguntaTexto) {
+                pregunta::create([
+                    'id_oferta' => $oferta->id_oferta,
+                    'pregunta' => $preguntaTexto,
+                ]);
+            }
+        }
 
 
         return response()->json(['message' => 'Oferta creado exitosamente', 'oferta' => $oferta], 201);
     }
-    
+
     public function updateOferta(Request $request, $id)
     {
         $oferta = Oferta::where('id_oferta', $id)->first();
@@ -136,6 +148,8 @@ class OfertaController extends Controller
             'criterios.*.id_criterio' => 'integer|exists:criterio,id_criterio',
             'criterios.*.valor' => 'string|nullable|max:255',
             'criterios.*.prioridad' => 'integer|between:1,3',
+            'preguntas' => 'nullable|array',
+           'preguntas.*' => 'string|max:400',
         ]);
 
         // Actualizar la oferta con los datos validados
@@ -180,6 +194,36 @@ class OfertaController extends Controller
             }
         }
 
+  // Actualizar las preguntas
+  if ($request->has('preguntas')) {
+    $preguntasActuales = Pregunta::where('id_oferta', $oferta->id_oferta)->get();
+
+    $nuevasPreguntas = array_map('trim', $validatedData['preguntas']);
+
+    // Eliminar preguntas que ya no están en la lista nueva
+    foreach ($preguntasActuales as $preguntaActual) {
+        if (!in_array($preguntaActual->pregunta, $nuevasPreguntas)) {
+            $preguntaActual->delete();
+        } else {
+            // Actualizar las preguntas existentes
+            $preguntaActual->update(['pregunta' => $preguntaActual->pregunta]);
+            $nuevasPreguntas = array_diff($nuevasPreguntas, [$preguntaActual->pregunta]);
+        }
+    }
+
+    // Añadir las nuevas preguntas
+    foreach ($nuevasPreguntas as $preguntaTexto) {
+        Pregunta::create([
+            'id_oferta' => $oferta->id_oferta,
+            'pregunta' => $preguntaTexto,
+        ]);
+    }
+} else {
+    // Si no se envían preguntas, eliminarlas todas
+    Pregunta::where('id_oferta', $oferta->id_oferta)->delete();
+}
+
+
         return response()->json(['message' => 'Oferta actualizada exitosamente']);
     }
 
@@ -213,16 +257,16 @@ class OfertaController extends Controller
         $query = Oferta::where('id_empresa', $user)
             ->with(['areas', 'criterios', 'expe']);
 
-            if ($request->has('cargo') && !empty($request->input('cargo'))) {
-                $cargo = $request->input('cargo');
-                $query->where('cargo', $cargo);
-            }
-       
-    if ($request->has('fecha_inicio') && $request->has('fecha_fin')&& !empty($request->input('fecha_inicio')) && !empty($request->input('fecha_fin'))) {
-        $fechaInicio = $request->input('fecha_inicio');
-        $fechaFin = $request->input('fecha_fin');
-        $query->whereBetween('fecha_publi', [$fechaInicio, $fechaFin]);
-    }
+        if ($request->has('cargo') && !empty($request->input('cargo'))) {
+            $cargo = $request->input('cargo');
+            $query->where('cargo', $cargo);
+        }
+
+        if ($request->has('fecha_inicio') && $request->has('fecha_fin') && !empty($request->input('fecha_inicio')) && !empty($request->input('fecha_fin'))) {
+            $fechaInicio = $request->input('fecha_inicio');
+            $fechaFin = $request->input('fecha_fin');
+            $query->whereBetween('fecha_publi', [$fechaInicio, $fechaFin]);
+        }
 
         if ($request->has('estado') && !empty($request->input('estado'))) {
             $estado = $request->input('estado');
@@ -248,7 +292,7 @@ class OfertaController extends Controller
     public function getOfertaById($id)
     {
         $oferta = Oferta::where('id_oferta', $id)
-            ->with(['areas', 'criterios', 'expe'])
+            ->with(['areas', 'criterios', 'expe','preguntas'])
             ->first();
 
         if (!$oferta) {
@@ -260,9 +304,9 @@ class OfertaController extends Controller
 
     public function getAllOfertas()
     {
-        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'expe'])
-        ->where('estado', 'En espera')
-        ->get();
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'expe', 'preguntas'])
+            ->where('estado', 'En espera')
+            ->get();
 
         return response()->json(['ofertas' => $ofertas]);
     }
