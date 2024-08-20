@@ -196,11 +196,14 @@ class EmpresaGestoraController extends Controller
     public function getUsuariosRegistradosPorMes(Request $request)
     {
         // Consulta para obtener el conteo de usuarios agrupados por mes y año
+        $year = $request->query('year', date('Y'));
+
         $usuariosPorMes = User::select(
                 DB::raw('YEAR(created_at) as year'),
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('COUNT(*) as total')
             )
+            ->whereYear('created_at', $year)
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
