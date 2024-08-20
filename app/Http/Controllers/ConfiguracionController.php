@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Configuracion;
+use App\Models\configuracion;
 
 class ConfiguracionController extends Controller
 {
@@ -22,6 +22,7 @@ class ConfiguracionController extends Controller
             'valor_prioridad_media' => 'required|integer',
             'valor_prioridad_baja' => 'required|integer',
             'terminos_condiciones' => 'nullable|string',
+            
         ]);
 
         // Verificar si ya existe alguna configuración en la base de datos

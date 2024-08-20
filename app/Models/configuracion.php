@@ -21,6 +21,7 @@ class configuracion extends Model
         'valor_prioridad_baja',
         'vigencia',
         'terminos_condiciones',
+        
     ];
 
 }
