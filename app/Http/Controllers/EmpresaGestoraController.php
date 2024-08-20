@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AreaTrabajo;
+use App\Models\Criterio;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Empresa;
@@ -379,7 +380,24 @@ public function getOfertas(Request $request)
     return response()->json($ofertas);
     }
 
+    public function update(Request $request, $id)
+    {
+        $criterio = Criterio::findOrFail($id);
+        $criterio->criterio = $request->input('criterio');
+        $criterio->descripcion = $request->input('descripcion');
+        $criterio->save();
+    
+        return response()->json(['message' => 'Criterio actualizado correctamente'], 200);
+    }
 
+    public function toggleVigencia(Request $request, $id)
+{
+    $criterio = Criterio::findOrFail($id);
+    $criterio->vigencia = $request->input('vigencia');
+    $criterio->save();
+
+    return response()->json(['message' => 'Vigencia del criterio actualizada correctamente'], 200);
+}
 
 
     
