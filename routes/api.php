@@ -179,7 +179,8 @@ Route::get('/postulantes-por-ubicacion', [EmpresaGestoraController::class, 'getP
 Route::get('/postulantes-por-area', [EmpresaGestoraController::class, 'getPostulantesPorArea']);
 Route::get('/postulantes-por-genero', [EmpresaGestoraController::class, 'getPostulantesPorGenero']);
 Route::post('/empresa/{id}/updateLogo', [EmpresaController::class, 'updateLogo']);
-
+Route::put('/criterios/{id}', [EmpresaGestoraController::class, 'update']);
+Route::put('/criterios/{id}/toggleVigencia', [EmpresaGestoraController::class,'toggleVigencia']);
 
 
 
