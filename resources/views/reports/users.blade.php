@@ -46,7 +46,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>ProaJob</h1>
+            <h1>Postula</h1>
             <p>Reporte de {{ $type }}</p>
             <p>Desde: {{ $startDate }} Hasta: {{ $endDate }}</p>
         </div>

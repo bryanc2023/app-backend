@@ -310,4 +310,15 @@ class OfertaController extends Controller
 
         return response()->json(['ofertas' => $ofertas]);
     }
+
+    public function getOfertasInicio()
+    {
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'expe', 'preguntas'])
+            ->where('estado', 'En espera')
+            ->orderBy('fecha_publi', 'desc')  // Ordena por la fecha de creación de forma descendente
+            ->take(3)  // Limita a 3 ofertas
+            ->get();
+
+        return response()->json(['ofertas' => $ofertas]);
+    }
 }
