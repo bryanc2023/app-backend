@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use App\Models\Empresa;
 use App\Models\EmpresaRed;
+use App\Models\SectorEconomico;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,20 @@ class EmpresaController extends Controller
         $empresa = new Empresa();
         $empresa->id_ubicacion = $request->ubicacion;
         $empresa->id_usuario = $request->usuario_id;
-        $empresa->id_sector = $request->sector;
+        if ($request->sector == '0') {
+             // Si es un string, crear un nuevo sector en la base de datos
+             $nuevoSector = SectorEconomico::create([
+                'sector' => 'OTRO',
+                'division' => $request->division,
+            ]);
+        
+            // Asignar el ID del nuevo sector a la empresa
+            $empresa->id_sector = $nuevoSector->id;
+           
+        } else {
+            $empresa->id_sector = $request->sector;
+        }
+      
         $empresa->nombre_comercial = $request->companyName;
         
         // Obtener el número de empleados
