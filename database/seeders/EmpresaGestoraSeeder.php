@@ -19,11 +19,20 @@ class EmpresaGestoraSeeder extends Seeder
     public function run()
     {
         // Crear el usuario
+        $user = User::create([
+            'id' => 9,
+            'name' => 'Proasetel',
+            'email' => 'proasetel@gmail.com',
+            'password' => Hash::make('Proasetel2024.'), // Hashear la contraseña
+            'role_id' => 4, // Asigna el rol adecuado (si aplica)
+            'email_verified_at' => now(),
+        ]);
+       
 
         // Crear la empresa asociada al usuario
         DB::table('empresa')->insert([
             'id_ubicacion' => 1, // Asigna el id de ubicación adecuado
-            'id_usuario' => 2,
+            'id_usuario' => $user->id, // Usar el ID del usuario recién creado
             'id_sector' => 1, // Asigna el id de sector adecuado
             'nombre_comercial' => 'Proasetel',
             'tamanio' => 'Mediana',
