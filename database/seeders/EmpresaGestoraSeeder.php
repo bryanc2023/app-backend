@@ -24,7 +24,7 @@ class EmpresaGestoraSeeder extends Seeder
             'name' => 'Proasetel',
             'email' => 'proasetel@gmail.com',
             'password' => Hash::make('Proasetel2024.'), // Hashear la contraseña
-            'role_id' => 2, // Asigna el rol adecuado (si aplica)
+            'role_id' => 4, // Asigna el rol adecuado (si aplica)
             'email_verified_at' => now(),
         ]);
 
