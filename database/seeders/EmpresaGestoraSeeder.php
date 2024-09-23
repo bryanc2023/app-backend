@@ -28,9 +28,8 @@ class EmpresaGestoraSeeder extends Seeder
             'nombre_comercial' => 'Proasetel',
             'tamanio' => 'Mediana',
             'descripcion' => 'Descripción de la empresa gestora',
-            'logo' => 'https://firebasestorage.googleapis.com/v0/b/proajob-486e1.appspot.com/o/logos%2Fimages%20(1).jfif?alt=media&token=fdf3ed9c-9e3c-4505-9465-665e3cfe9d9f',
+            'logo' => 'https://firebasestorage.googleapis.com/v0/b/postu-a5f32.appspot.com/o/logos%2Fdescarga.jfif?alt=media&token=e4e04402-4bab-4915-8608-d8c7d5927054',
             'cantidad_empleados' => 50,
-
         ]);
     }
 }
