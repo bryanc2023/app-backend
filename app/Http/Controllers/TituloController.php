@@ -31,12 +31,18 @@ class TituloController extends Controller
 
     public function getTitulosCamposNivel($nivel,$campo)
     {
-        $titulos = Titulo::where('nivel_educacion', $nivel)
-        ->where('campo_amplio', $campo)
-        ->select('id', 'titulo')
-        ->distinct()
-        ->get();
-return response()->json($titulos);
+        $query = Titulo::where('nivel_educacion', $nivel);
+
+        // Si el campo no es "todos", aplicar el filtro por campo amplio
+        if ($campo !== 'todos') {
+            $query->where('campo_amplio', $campo);
+        }
+    
+        $titulos = $query->select('id', 'titulo')
+                         ->distinct()
+                         ->get();
+    
+        return response()->json($titulos);
     }
 
    
