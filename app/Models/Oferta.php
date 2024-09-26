@@ -59,7 +59,7 @@ public function preguntas()
 public function expe()
     {
         return $this->belongsToMany(Titulo::class, 'educacion_requerida', 'id_oferta', 'id_titulo')
-        ->withPivot('prioridad');
+        ->withPivot('prioridad','titulo_per');
         
     }
 

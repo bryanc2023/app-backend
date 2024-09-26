@@ -36,7 +36,8 @@ class OfertaController extends Controller
             'carga_horaria' => 'required|string',
             'titulos' => 'nullable|array',
             'titulos.*.id' => 'integer',
-            'titulos.*.titulo' => 'string|max:255',
+            'titulos.*.titulo' => 'string|max:500',
+            'titulos.*.customTitulo' => 'nullable|string|max:600',
             'criterios' => 'nullable|array',
             'criterios.*.id_criterio' => 'integer',
             'criterios.*.criterio' => 'string|max:255',
@@ -88,6 +89,7 @@ class OfertaController extends Controller
                 EducacionRequerida::create([
                     'id_oferta' => $oferta->id_oferta,
                     'id_titulo' => $titulo['id'],
+                    'titulo_per' => $titulo['customTitulo'],
                 ]);
             }
         }
@@ -144,6 +146,7 @@ class OfertaController extends Controller
             'titulos' => 'nullable|array',
             'titulos.*.id' => 'integer',
             'titulos.*.titulo' => 'string|max:255',
+            'titulos.*.customTitulo' => 'nullable|string|max:600',
             'criterios' => 'nullable|array',
             'criterios.*.id_criterio' => 'integer|exists:criterio,id_criterio',
             'criterios.*.valor' => 'string|nullable|max:255',
@@ -175,7 +178,7 @@ class OfertaController extends Controller
         if ($request->has('titulos')) {
             // Sincronizar los títulos con la tabla `educacion_requerida`
             $oferta->expe()->sync(array_map(function ($titulo) {
-                return ['id_titulo' => $titulo['id']];
+                return ['id_titulo' => $titulo['id'],'titulo_per' => $titulo['customTitulo']];
             }, $request->titulos));
         }
 
