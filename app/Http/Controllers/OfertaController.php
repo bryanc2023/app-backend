@@ -36,7 +36,8 @@ class OfertaController extends Controller
             'carga_horaria' => 'required|string',
             'titulos' => 'nullable|array',
             'titulos.*.id' => 'integer',
-            'titulos.*.titulo' => 'string|max:255',
+            'titulos.*.titulo' => 'string|max:500',
+            'titulos.*.customTitulo' => 'nullable|string|max:600',
             'criterios' => 'nullable|array',
             'criterios.*.id_criterio' => 'integer',
             'criterios.*.criterio' => 'string|max:255',
@@ -46,6 +47,12 @@ class OfertaController extends Controller
             'usuario' => 'required|integer',
             'preguntas' => 'nullable|array',
             'preguntas.*' => 'string|max:400',
+            'comisiones' => 'nullable|numeric',
+            'horasExtras' => 'nullable|numeric',
+            'viaticos'=> 'nullable|numeric',
+            'comentariosComisiones' => 'string|nullable|max:800',
+            'comentariosHorasExtras' => 'string|nullable|max:800',
+            'comentariosViaticos' => 'string|nullable|max:800',
         ]);
         // Buscar el usuario por ID
         $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
@@ -78,6 +85,12 @@ class OfertaController extends Controller
         $oferta->estado = "En espera";
         $oferta->fecha_max_pos = $validatedData['fecha_max_pos'];
         $oferta->funciones = $validatedData['funciones'];
+        $oferta->comisiones = $validatedData['comisiones'];
+        $oferta->horasExtras = $validatedData['horasExtras'];
+        $oferta->viaticos = $validatedData['viaticos'];
+        $oferta->comentariosComisiones = $validatedData['comentariosComisiones'];
+        $oferta->comentariosHorasExtras = $validatedData['comentariosHorasExtras'];
+        $oferta->comentariosViaticos = $validatedData['comentariosViaticos'];
         $oferta->save();
 
 
@@ -88,6 +101,7 @@ class OfertaController extends Controller
                 EducacionRequerida::create([
                     'id_oferta' => $oferta->id_oferta,
                     'id_titulo' => $titulo['id'],
+                    'titulo_per' => $titulo['customTitulo'],
                 ]);
             }
         }
@@ -144,12 +158,19 @@ class OfertaController extends Controller
             'titulos' => 'nullable|array',
             'titulos.*.id' => 'integer',
             'titulos.*.titulo' => 'string|max:255',
+            'titulos.*.customTitulo' => 'nullable|string|max:600',
             'criterios' => 'nullable|array',
             'criterios.*.id_criterio' => 'integer|exists:criterio,id_criterio',
             'criterios.*.valor' => 'string|nullable|max:255',
             'criterios.*.prioridad' => 'integer|between:1,3',
             'preguntas' => 'nullable|array',
            'preguntas.*' => 'string|max:400',
+           'comisiones' => 'nullable|numeric',
+            'horasExtras' => 'nullable|numeric',
+            'viaticos'=> 'nullable|numeric',
+            'comentariosComisiones' => 'string|nullable|max:800',
+            'comentariosHorasExtras' => 'string|nullable|max:800',
+            'comentariosViaticos' => 'string|nullable|max:800',
         ]);
 
         // Actualizar la oferta con los datos validados
@@ -169,13 +190,19 @@ class OfertaController extends Controller
             'funciones' => $validatedData['funciones'],
             'modalidad' => $validatedData['modalidad'],
             'carga_horaria' => $validatedData['carga_horaria'],
+            'comisiones'=> $validatedData['comisiones'],
+            'horasExtras'=> $validatedData['horasExtras'],
+            'viaticos'=> $validatedData['viaticos'],
+            'comentariosComisiones' => $validatedData['comentariosComisiones'],
+            'comentariosHorasExtras' => $validatedData['comentariosHorasExtras'],
+            'comentariosViaticos' => $validatedData['comentariosViaticos'],
         ]);
 
         // Actualizar las relaciones (titulos y criterios) si se proporcionan
         if ($request->has('titulos')) {
             // Sincronizar los títulos con la tabla `educacion_requerida`
             $oferta->expe()->sync(array_map(function ($titulo) {
-                return ['id_titulo' => $titulo['id']];
+                return ['id_titulo' => $titulo['id'],'titulo_per' => $titulo['customTitulo']];
             }, $request->titulos));
         }
 
@@ -255,7 +282,7 @@ class OfertaController extends Controller
         }
 
         $query = Oferta::where('id_empresa', $user)
-            ->with(['areas', 'criterios', 'expe']);
+            ->with(['areas', 'criterios', 'expe','preguntas']);
 
         if ($request->has('cargo') && !empty($request->input('cargo'))) {
             $cargo = $request->input('cargo');

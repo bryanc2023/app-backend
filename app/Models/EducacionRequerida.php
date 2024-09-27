@@ -16,7 +16,8 @@ class EducacionRequerida extends Model
     protected $fillable = [
         'id_oferta',
         'id_titulo',
-        'prioridad'
+        'prioridad',
+        'titulo_per'
        
     ];
     
