@@ -30,7 +30,13 @@ class Oferta extends Model
         'estado',
         'n_mostrar_sueldo',
         'n_mostrar_empresa',
-        'soli_sueldo'
+        'soli_sueldo',
+        'comisiones',
+        'horasExtras',
+        'viaticos',
+        'comentariosComisiones',
+        'comentariosHorasExtras',
+        'comentariosViaticos'
     ];
 
     // Relación con la tabla Empresa

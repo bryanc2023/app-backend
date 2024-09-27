@@ -47,6 +47,12 @@ class OfertaController extends Controller
             'usuario' => 'required|integer',
             'preguntas' => 'nullable|array',
             'preguntas.*' => 'string|max:400',
+            'comisiones' => 'nullable|numeric',
+            'horasExtras' => 'nullable|numeric',
+            'viaticos'=> 'nullable|numeric',
+            'comentariosComisiones' => 'string|nullable|max:800',
+            'comentariosHorasExtras' => 'string|nullable|max:800',
+            'comentariosViaticos' => 'string|nullable|max:800',
         ]);
         // Buscar el usuario por ID
         $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
@@ -79,6 +85,12 @@ class OfertaController extends Controller
         $oferta->estado = "En espera";
         $oferta->fecha_max_pos = $validatedData['fecha_max_pos'];
         $oferta->funciones = $validatedData['funciones'];
+        $oferta->comisiones = $validatedData['comisiones'];
+        $oferta->horasExtras = $validatedData['horasExtras'];
+        $oferta->viaticos = $validatedData['viaticos'];
+        $oferta->comentariosComisiones = $validatedData['comentariosComisiones'];
+        $oferta->comentariosHorasExtras = $validatedData['comentariosHorasExtras'];
+        $oferta->comentariosViaticos = $validatedData['comentariosViaticos'];
         $oferta->save();
 
 
@@ -153,6 +165,12 @@ class OfertaController extends Controller
             'criterios.*.prioridad' => 'integer|between:1,3',
             'preguntas' => 'nullable|array',
            'preguntas.*' => 'string|max:400',
+           'comisiones' => 'nullable|numeric',
+            'horasExtras' => 'nullable|numeric',
+            'viaticos'=> 'nullable|numeric',
+            'comentariosComisiones' => 'string|nullable|max:800',
+            'comentariosHorasExtras' => 'string|nullable|max:800',
+            'comentariosViaticos' => 'string|nullable|max:800',
         ]);
 
         // Actualizar la oferta con los datos validados
@@ -172,6 +190,12 @@ class OfertaController extends Controller
             'funciones' => $validatedData['funciones'],
             'modalidad' => $validatedData['modalidad'],
             'carga_horaria' => $validatedData['carga_horaria'],
+            'comisiones'=> $validatedData['comisiones'],
+            'horasExtras'=> $validatedData['horasExtras'],
+            'viaticos'=> $validatedData['viaticos'],
+            'comentariosComisiones' => $validatedData['comentariosComisiones'],
+            'comentariosHorasExtras' => $validatedData['comentariosHorasExtras'],
+            'comentariosViaticos' => $validatedData['comentariosViaticos'],
         ]);
 
         // Actualizar las relaciones (titulos y criterios) si se proporcionan
@@ -258,7 +282,7 @@ class OfertaController extends Controller
         }
 
         $query = Oferta::where('id_empresa', $user)
-            ->with(['areas', 'criterios', 'expe']);
+            ->with(['areas', 'criterios', 'expe','preguntas']);
 
         if ($request->has('cargo') && !empty($request->input('cargo'))) {
             $cargo = $request->input('cargo');
