@@ -101,7 +101,7 @@ class OfertaController extends Controller
                 EducacionRequerida::create([
                     'id_oferta' => $oferta->id_oferta,
                     'id_titulo' => $titulo['id'],
-                    'titulo_per' => $titulo['customTitulo'],
+                    'titulo_per2' => $titulo['customTitulo'],
                 ]);
             }
         }
@@ -202,7 +202,7 @@ class OfertaController extends Controller
         if ($request->has('titulos')) {
             // Sincronizar los títulos con la tabla `educacion_requerida`
             $oferta->expe()->sync(array_map(function ($titulo) {
-                return ['id_titulo' => $titulo['id'],'titulo_per' => $titulo['customTitulo']];
+                return ['id_titulo' => $titulo['id'],'titulo_per2' => $titulo['customTitulo']];
             }, $request->titulos));
         }
 
