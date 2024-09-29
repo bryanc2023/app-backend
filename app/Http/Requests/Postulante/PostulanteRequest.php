@@ -24,7 +24,7 @@ class PostulanteRequest extends FormRequest
     public function rules()
     {
         return [
-            'foto' => 'required|string', // Ejemplo de validación para una imagen
+            'foto' => 'string', // Ejemplo de validación para una imagen
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
             'ubicacion_id' => 'required|exists:ubicacion,id', // Validación para asegurarse de que el ID de ubicación existe en la tabla 'ubicaciones'
@@ -32,7 +32,7 @@ class PostulanteRequest extends FormRequest
             'idNumber' => 'required|string|max:20',
             'gender' => 'required|string|in:Masculino,Femenino,Otro',
             'maritalStatus' => 'required|string|in:Soltero,Casado,Divorciado,Viudo',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string',
             'usuario_id' => 'required|exists:users,id', // Validación para asegurarse de que el ID de usuario existe en la tabla 'users'
         ];
     }

@@ -348,4 +348,19 @@ class OfertaController extends Controller
 
         return response()->json(['ofertas' => $ofertas]);
     }
+
+    // En tu controlador de ofertas
+
+public function actualizarEstadoOfertas()
+{
+    // Obtén la fecha actual
+    $fechaActual = now(); // o puedes usar Carbon::now();
+
+    // Busca las ofertas cuya fecha máxima de postulación sea menor que hoy
+    $ofertasInactivas = Oferta::where('fecha_max_pos', '<', $fechaActual)
+        ->update(['estado' => 'Inactiva']);
+
+    return response()->json(['mensaje' => 'Estado de ofertas actualizadas', 'ofertas_inactivas' => $ofertasInactivas]);
+}
+
 }

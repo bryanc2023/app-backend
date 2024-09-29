@@ -50,27 +50,42 @@ class PostulanteController extends Controller
         $postulante->informacion_extra = $request->description;
         $postulante->foto = $request->foto; // URL de Firebase para la foto
         $postulante->cv = $request->cv; // URL de Firebase para el CV
-        $postulante->telefono = $request->telefono; 
+        $postulante->telefono = $request->telefono;
+
+
+        // Actualizar el campo first_login_at del usuario
+        $userId = $request->usuario_id; // Obtener el ID del usuario
+
+        // Buscar el usuario en la base de datos
+        $user = User::find($userId); // Cambia 'User' por el nombre de tu modelo de usuario
+
+        if ($user) {
+            $user->first_login_at = now(); // Asignar la fecha actual
+            $user->save(); // Guardar los cambios
+        } else {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
 
         // Guardar el postulante
         $postulante->save();
 
- 
+
 
         return response()->json(['message' => 'Postulante creado exitosamente', 'postulante' => $postulante], 201);
     }
 
     public function getCV($id_usuario)
-{
-    // Verificar si existe un registro de postulante para este usuario
-    $postulante = Postulante::where('id_usuario', $id_usuario)->first();
-    if (!$postulante) {
-        return response()->json(['message' => 'No se encontró el registro del postulante'], 404);
-    }
+    {
+        // Verificar si existe un registro de postulante para este usuario
+        $postulante = Postulante::where('id_usuario', $id_usuario)->first();
+        if (!$postulante) {
+            return response()->json(['message' => 'No se encontró el registro del postulante'], 404);
+        }
 
-    // Devolver la URL del CV
-    return response()->json(['cv_url' => $postulante->cv], 200);
-}
+        // Devolver la URL del CV
+        return response()->json(['cv_url' => $postulante->cv], 200);
+    }
 
     public function obtenerIdPostulante(Request $request)
     {
@@ -84,74 +99,74 @@ class PostulanteController extends Controller
         }
     }
 
-    
+
 
     public function getPerfil($id)
-{
-    try {
-        $postulante = Postulante::with(['ubicacion', 'formaciones.titulo', 'idiomas.idioma','habilidades.habilidad','competencias.competencia'])->where('id_usuario', $id)->first();
-        if (!$postulante) {
-            return response()->json(['message' => 'User not found'], 404);
+    {
+        try {
+            $postulante = Postulante::with(['ubicacion', 'formaciones.titulo', 'idiomas.idioma', 'habilidades.habilidad', 'competencias.competencia'])->where('id_usuario', $id)->first();
+            if (!$postulante) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $response = [
+                'postulante' => $postulante,
+                'ubicacion' => $postulante->ubicacion,
+                'formaciones' => $postulante->formaciones->map(function ($formacion) {
+                    return [
+                        'institucion' => $formacion->institucion,
+                        'estado' => $formacion->estado,
+                        'fechaini' => $formacion->fecha_ini,
+                        'fechafin' => $formacion->fecha_fin,
+                        'titulo' => $formacion->titulo,
+                        'titulo_acreditado' => $formacion->titulo_acreditado,
+                    ];
+                }),
+                'idiomas' => $postulante->idiomas->map(function ($idioma) {
+                    return [
+                        'idioma' => $idioma->nombre,
+                        'nivel_oral' => $idioma->nivel_oral,
+                        'nivel_escrito' => $idioma->nivel_escrito,
+                    ];
+                }),
+                'habilidades' => $postulante->habilidades->map(function ($habilidad) {
+                    return [
+                        'habilidad' => $habilidad->habilidad,
+                        'nivel' => $habilidad->nivel,
+                    ];
+                }),
+                'competencias' => $postulante->competencias->map(function ($competencia) {
+                    return [
+                        'grupo' => $competencia->grupo,
+                        'nombre' => $competencia->nombre,
+                        'nivel' => $competencia->nivel,
+                    ];
+                }),
+            ];
+
+            return response()->json($response);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error retrieving user profile'], 500);
         }
-
-        $response = [
-            'postulante' => $postulante,
-            'ubicacion' => $postulante->ubicacion,
-            'formaciones' => $postulante->formaciones->map(function ($formacion) {
-                return [
-                    'institucion' => $formacion->institucion,
-                    'estado' => $formacion->estado,
-                    'fechaini' => $formacion->fecha_ini,
-                    'fechafin' => $formacion->fecha_fin,
-                    'titulo' => $formacion->titulo,
-                    'titulo_acreditado' => $formacion->titulo_acreditado,
-                ];
-            }),
-            'idiomas' => $postulante->idiomas->map(function ($idioma) {
-                return [
-                    'idioma' => $idioma->nombre,
-                    'nivel_oral' => $idioma->nivel_oral,
-                    'nivel_escrito' => $idioma->nivel_escrito,
-                ];
-            }),
-            'habilidades' => $postulante->habilidades->map(function ($habilidad) {
-                return [
-                    'habilidad' => $habilidad->habilidad,
-                    'nivel' => $habilidad->nivel,
-                ];
-            }),
-            'competencias' => $postulante->competencias->map(function ($competencia) {
-                return [
-                    'grupo' => $competencia->grupo,
-                    'nombre' => $competencia->nombre,
-                    'nivel' => $competencia->nivel,
-                ];
-            }),
-        ];
-
-        return response()->json($response);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Error retrieving user profile'], 500);
     }
-}
 
-public function getCurriculum($id)
-{
-    try {
-        $postulante = Postulante::with(['ubicacion', 'formaciones.titulo', 'idiomas.idioma','red','certificado','formapro','habilidades.habilidad','competencias.competencia'])->where('id_usuario', $id)->first();
-        if (!$postulante) {
-            return response()->json(['message' => 'User not found'], 404);
+    public function getCurriculum($id)
+    {
+        try {
+            $postulante = Postulante::with(['ubicacion', 'formaciones.titulo', 'idiomas.idioma', 'red', 'certificado', 'formapro', 'habilidades.habilidad', 'competencias.competencia'])->where('id_usuario', $id)->first();
+            if (!$postulante) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $response = [
+                'postulante' => $postulante
+            ];
+
+            return response()->json($response);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error retrieving user profile'], 500);
         }
-
-        $response = [
-            'postulante' => $postulante
-        ];
-
-        return response()->json($response);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Error retrieving user profile'], 500);
     }
-}
 
     public function registroFormaAca(Request $request)
     {
@@ -170,12 +185,12 @@ public function getCurriculum($id)
             'puesto' => 'nullable|string|max:100',
             'fechae1' => 'nullable|date',
             'fechae2' => 'nullable|date',
-            'descripcion' => 'nullable|string|max:500',
+            'descripcion' => 'nullable|string',
             'referencia' => 'nullable|string|max:250',
-            'area'=> 'nullable|string|max:250',
-            'contacto'=> 'nullable|string|max:250',
-            'red'=>'nullable|string|max:250',
-            'enlace'=>'nullable|url'
+            'area' => 'nullable|string|max:250',
+            'contacto' => 'nullable|string|max:250',
+            'red' => 'nullable|string|max:250',
+            'enlace' => 'nullable|url'
         ]);
 
         $postulantefor = new PersonaFormacionPro();
@@ -198,12 +213,7 @@ public function getCurriculum($id)
         $postulante = Postulante::find($request->id_postulante);
         $postulante->cv = null;
 
-           // Actualizar el campo first_login_at del usuario
-           $user = $postulante->usuario;
-           if ($user && is_null($user->first_login_at)) {
-               $user->first_login_at = now();
-               $user->save();
-           }
+
 
         if ($request->empresa && $request->puesto && $request->descripcion && $request->referencia && $request->area && $request->contacto) {
             $postulantexp = new FormacionPro();
@@ -216,7 +226,7 @@ public function getCurriculum($id)
             $postulantexp->persona_referencia = $request->referencia;
             $postulantexp->area = $request->area;
             $postulantexp->contacto = $request->contacto;
-    
+
             if ($request->fechae1 && $request->fechae2) {
                 $fecha1 = new DateTime($request->fechae1);
                 $fecha2 = new DateTime($request->fechae2);
@@ -227,21 +237,21 @@ public function getCurriculum($id)
                 $postulantexp->mes_e = 0;
                 $postulantexp->anios_e = 0;
             }
-    
+
             $postulantexp->save();
         }
 
-        if ($request->red && $request->enlace){
+        if ($request->red && $request->enlace) {
 
-      
 
-        $postulanteRed = new PostulanteRed();
-        $postulanteRed->id_postulante = $request->id_postulante;
-        $postulanteRed->nombre_red = $request->red;
-        $postulanteRed->enlace = $request->enlace;
-            
-        $postulanteRed->save();
-    }
+
+            $postulanteRed = new PostulanteRed();
+            $postulanteRed->id_postulante = $request->id_postulante;
+            $postulanteRed->nombre_red = $request->red;
+            $postulanteRed->enlace = $request->enlace;
+
+            $postulanteRed->save();
+        }
 
 
         return response()->json(['message' => 'Formación académica registrada exitosamente', 'postulante_formacion' => $postulante], 201);
@@ -258,106 +268,106 @@ public function getCurriculum($id)
     }
 
     public function registroIdioma(Request $request)
-{
-    $request->validate([
-        'userId' => 'required|integer',
-        'idiomaId' => 'required|integer|exists:idioma,id',
-        'nivelOral' => 'required|string|max:220',
-        'nivelEscrito' => 'required|string|max:30'
-    ]);
+    {
+        $request->validate([
+            'userId' => 'required|integer',
+            'idiomaId' => 'required|integer|exists:idioma,id',
+            'nivelOral' => 'required|string|max:220',
+            'nivelEscrito' => 'required|string|max:30'
+        ]);
 
-    $postulante = Postulante::where('id_usuario', $request->userId)->first();
-    if (!$postulante) {
-        return response()->json(['error' => 'Postulante no encontrado'], 404);
-    }
-
-    $idp = $postulante->id_postulante;
-
-    try {
-        $postulanteidi = new PostulanteIdioma();
-        $postulanteidi->id_postulante = $idp;
-        $postulanteidi->id_idioma = $request->idiomaId;
-        $postulanteidi->nivel_oral = $request->nivelOral;
-        $postulanteidi->nivel_escrito = $request->nivelEscrito;
-        $postulanteidi->save();
-
-        return response()->json(['message' => 'Idioma registrado exitosamente', 'postulante_formacion' => $postulanteidi], 201);
-    } catch (\Illuminate\Database\QueryException $ex) {
-        if($ex->errorInfo[1] == 1062) {
-            return response()->json(['error' => 'Este idioma ya ha sido registrado para este postulante'], 409);
+        $postulante = Postulante::where('id_usuario', $request->userId)->first();
+        if (!$postulante) {
+            return response()->json(['error' => 'Postulante no encontrado'], 404);
         }
-        return response()->json(['error' => 'Error al registrar el idioma'], 500);
-    }
-}
 
+        $idp = $postulante->id_postulante;
 
+        try {
+            $postulanteidi = new PostulanteIdioma();
+            $postulanteidi->id_postulante = $idp;
+            $postulanteidi->id_idioma = $request->idiomaId;
+            $postulanteidi->nivel_oral = $request->nivelOral;
+            $postulanteidi->nivel_escrito = $request->nivelEscrito;
+            $postulanteidi->save();
 
-public function registroHabilidad(Request $request)
-{
-    $request->validate([
-        'userId' => 'required|integer',
-        'habilidadId' => 'required|integer|exists:habilidad,id',
-        'nivel' => 'required|string|max:220',
-    ]);
-
-    $postulante = Postulante::where('id_usuario', $request->userId)->first();
-    if (!$postulante) {
-        return response()->json(['error' => 'Postulante no encontrado'], 404);
-    }
-
-    $idp = $postulante->id_postulante;
-
-    // Verificar si la habilidad ya está registrada para el postulante
-    $existingHabilidad = Postulante_Habilidad::where('id_postulante', $idp)
-        ->where('id_habilidad', $request->habilidadId)
-        ->first();
-
-    if ($existingHabilidad) {
-        return response()->json(['error' => 'La habilidad ya está registrada para este postulante'], 409);
+            return response()->json(['message' => 'Idioma registrado exitosamente', 'postulante_formacion' => $postulanteidi], 201);
+        } catch (\Illuminate\Database\QueryException $ex) {
+            if ($ex->errorInfo[1] == 1062) {
+                return response()->json(['error' => 'Este idioma ya ha sido registrado para este postulante'], 409);
+            }
+            return response()->json(['error' => 'Error al registrar el idioma'], 500);
+        }
     }
 
-    $postulanteHabilidad = new Postulante_Habilidad();
-    $postulanteHabilidad->id_postulante = $idp;
-    $postulanteHabilidad->id_habilidad = $request->habilidadId;
-    $postulanteHabilidad->nivel = $request->nivel;
-    $postulanteHabilidad->save();
 
-    return response()->json(['message' => 'Habilidad agregada correctamente', 'postulante_habilidad' => $postulanteHabilidad], 201);
-}
+
+    public function registroHabilidad(Request $request)
+    {
+        $request->validate([
+            'userId' => 'required|integer',
+            'habilidadId' => 'required|integer|exists:habilidad,id',
+            'nivel' => 'required|string|max:220',
+        ]);
+
+        $postulante = Postulante::where('id_usuario', $request->userId)->first();
+        if (!$postulante) {
+            return response()->json(['error' => 'Postulante no encontrado'], 404);
+        }
+
+        $idp = $postulante->id_postulante;
+
+        // Verificar si la habilidad ya está registrada para el postulante
+        $existingHabilidad = Postulante_Habilidad::where('id_postulante', $idp)
+            ->where('id_habilidad', $request->habilidadId)
+            ->first();
+
+        if ($existingHabilidad) {
+            return response()->json(['error' => 'La habilidad ya está registrada para este postulante'], 409);
+        }
+
+        $postulanteHabilidad = new Postulante_Habilidad();
+        $postulanteHabilidad->id_postulante = $idp;
+        $postulanteHabilidad->id_habilidad = $request->habilidadId;
+        $postulanteHabilidad->nivel = $request->nivel;
+        $postulanteHabilidad->save();
+
+        return response()->json(['message' => 'Habilidad agregada correctamente', 'postulante_habilidad' => $postulanteHabilidad], 201);
+    }
 
 
     public function registroCompetencia(Request $request)
-{
-    $request->validate([
-        'userId' => 'required|integer',
-        'competenciaId' => 'required|integer|exists:competencia,id',
-        'nivel' => 'required|string|max:220',
-    ]);
+    {
+        $request->validate([
+            'userId' => 'required|integer',
+            'competenciaId' => 'required|integer|exists:competencia,id',
+            'nivel' => 'required|string|max:220',
+        ]);
 
-    $postulante = Postulante::where('id_usuario', $request->userId)->first();
-    if (!$postulante) {
-        return response()->json(['error' => 'Postulante no encontrado'], 404);
+        $postulante = Postulante::where('id_usuario', $request->userId)->first();
+        if (!$postulante) {
+            return response()->json(['error' => 'Postulante no encontrado'], 404);
+        }
+
+        $idp = $postulante->id_postulante;
+
+        // Verificar si la competencia ya está registrada para el postulante
+        $existeCompetencia = PostulanteCompetencia::where('id_postulante', $idp)
+            ->where('id_competencia', $request->competenciaId)
+            ->exists();
+
+        if ($existeCompetencia) {
+            return response()->json(['error' => 'La competencia ya está registrada para este postulante'], 409);
+        }
+
+        $postulanteCompetencia = new PostulanteCompetencia();
+        $postulanteCompetencia->id_postulante = $idp;
+        $postulanteCompetencia->id_competencia = $request->competenciaId;
+        $postulanteCompetencia->nivel = $request->nivel;
+        $postulanteCompetencia->save();
+
+        return response()->json(['message' => 'Competencia agregada correctamente', 'postulante_competencia' => $postulanteCompetencia], 201);
     }
-
-    $idp = $postulante->id_postulante;
-
-    // Verificar si la competencia ya está registrada para el postulante
-    $existeCompetencia = PostulanteCompetencia::where('id_postulante', $idp)
-                                               ->where('id_competencia', $request->competenciaId)
-                                               ->exists();
-
-    if ($existeCompetencia) {
-        return response()->json(['error' => 'La competencia ya está registrada para este postulante'], 409);
-    }
-
-    $postulanteCompetencia = new PostulanteCompetencia();
-    $postulanteCompetencia->id_postulante = $idp;
-    $postulanteCompetencia->id_competencia = $request->competenciaId;
-    $postulanteCompetencia->nivel = $request->nivel;
-    $postulanteCompetencia->save();
-
-    return response()->json(['message' => 'Competencia agregada correctamente', 'postulante_competencia' => $postulanteCompetencia], 201);
-}
 
 
     public function updatePostulanteByIdUser(Request $request, $idUser)
@@ -418,7 +428,6 @@ public function registroHabilidad(Request $request)
                 'message' => 'Postulante actualizado correctamente',
                 'postulante' => $postulante->load('ubicacion')
             ]);
-
         } catch (\Throwable $th) {
             Log::error('Error al actualizar el postulante: ' . $th->getMessage());
             return response()->json([
@@ -429,43 +438,43 @@ public function registroHabilidad(Request $request)
     }
 
     public function registroFormaAcaPlus(Request $request)
-{
-    $request->validate([
-        'id_postulante' => 'required|integer|exists:postulante,id_postulante',
-        'id_titulo' => 'required|integer|exists:titulo,id',
-        'institucion' => 'required|string|max:220',
-        'estado' => 'required|string|max:30',
-        'fechaini' => 'nullable|date',
-        'fechafin' => 'nullable|date',
-        'titulo_acreditado' => 'required|string|max:220'
-    ]);
+    {
+        $request->validate([
+            'id_postulante' => 'required|integer|exists:postulante,id_postulante',
+            'id_titulo' => 'required|integer|exists:titulo,id',
+            'institucion' => 'required|string|max:220',
+            'estado' => 'required|string|max:30',
+            'fechaini' => 'nullable|date',
+            'fechafin' => 'nullable|date',
+            'titulo_acreditado' => 'required|string|max:220'
+        ]);
 
-    // Buscar el postulante directamente por id_postulante
-    $postulante = Postulante::find($request->id_postulante);
-    if (!$postulante) {
-        return response()->json(['error' => 'Postulante no encontrado'], 404);
+        // Buscar el postulante directamente por id_postulante
+        $postulante = Postulante::find($request->id_postulante);
+        if (!$postulante) {
+            return response()->json(['error' => 'Postulante no encontrado'], 404);
+        }
+
+        // Crear y guardar la nueva formación académica
+        $postulantefor = new PersonaFormacionPro();
+        $postulantefor->id_postulante = $request->id_postulante;
+        $postulantefor->id_titulo = $request->id_titulo;
+        $postulantefor->institucion = $request->institucion;
+        $postulantefor->estado = $request->estado;
+        $postulantefor->fecha_ini = $request->fechaini;
+        $postulantefor->fecha_fin = $request->fechafin;
+        $postulantefor->titulo_acreditado = $request->titulo_acreditado;
+        $postulantefor->save();
+
+        return response()->json(['message' => 'Formación académica registrada exitosamente', 'postulante_formacion' => $postulantefor], 201);
     }
 
-    // Crear y guardar la nueva formación académica
-    $postulantefor = new PersonaFormacionPro();
-    $postulantefor->id_postulante = $request->id_postulante;
-    $postulantefor->id_titulo = $request->id_titulo;
-    $postulantefor->institucion = $request->institucion;
-    $postulantefor->estado = $request->estado;
-    $postulantefor->fecha_ini = $request->fechaini;
-    $postulantefor->fecha_fin = $request->fechafin;
-    $postulantefor->titulo_acreditado = $request->titulo_acreditado;
-    $postulantefor->save();
 
-    return response()->json(['message' => 'Formación académica registrada exitosamente', 'postulante_formacion' => $postulantefor], 201);
-}
-
-    
     public function updateFormacionAcademica(Request $request)
     {
         try {
             DB::beginTransaction();
-    
+
             $idPostulante = $request->input('id_postulante');
             $idTitulo = $request->input('id_titulo');
             $institucion = $request->input('institucion');
@@ -473,7 +482,7 @@ public function registroHabilidad(Request $request)
             $fechaini = $request->input('fechaini');
             $fechafin = $request->input('fechafin');
             $titulo_acreditado = $request->input('titulo_acreditado');
-    
+
             // Actualizar los datos de formación académica
             DB::table('formacion_academica')
                 ->where('id_postulante', $idPostulante)
@@ -482,37 +491,38 @@ public function registroHabilidad(Request $request)
                     'institucion' => $institucion,
                     'estado' => $estado,
                     'fecha_ini' => $fechaini,
-                    'fecha_fin' => $fechafin?:Null,
+                    'fecha_fin' => $fechafin ?: Null,
                     'titulo_acreditado' => $titulo_acreditado,
                 ]);
-    
+
             DB::commit();
-    
+
             return response()->json(['message' => 'Formación académica actualizada exitosamente.']);
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json(['message' => 'No se pudo actualizar la información académica', 'error' => $th->getMessage()], 500);
         }
     }
-    
-    public function deleteFormacionAcademica(Request $request) {
+
+    public function deleteFormacionAcademica(Request $request)
+    {
         try {
             $idPostulante = $request->input('id_postulante');
             $idTitulo = $request->input('id_titulo');
-    
+
             DB::table('formacion_academica')
-            ->where('id_postulante', $idPostulante)
-            ->where('id_titulo', $idTitulo)
-            ->delete();
-    
+                ->where('id_postulante', $idPostulante)
+                ->where('id_titulo', $idTitulo)
+                ->delete();
+
             return response()->json(['message' => 'Formación académica eliminada correctamente'], 200);
-    
         } catch (\Throwable $th) {
             return response()->json(['message' => 'No se pudo eliminar la formación académica', 'error' => $th->getMessage()], 500);
         }
     }
 
-    public function agregarExperiencia(Request $request) {
+    public function agregarExperiencia(Request $request)
+    {
         $request->validate([
             'id_postulante' => 'required|integer',
             'empresa' => 'required|string|max:100',
@@ -521,15 +531,15 @@ public function registroHabilidad(Request $request)
             'fecha_fin' => 'nullable|date',
             'descripcion_responsabilidades' => 'required|string',
             'persona_referencia' => 'required|string|max:250',
-            'area'=> 'required|string|max:250',
-            'contacto'=> 'required|string|max:250'
+            'area' => 'required|string|max:250',
+            'contacto' => 'required|string|max:250'
         ]);
-    
+
         $postulante = Postulante::find($request->id_postulante);
         if (!$postulante) {
             return response()->json(['error' => 'Postulante no encontrado'], 404);
         }
-    
+
         $postulantexp = new FormacionPro();
         $postulantexp->id_postulante = $request->id_postulante;
         $postulantexp->empresa = $request->empresa;
@@ -540,7 +550,7 @@ public function registroHabilidad(Request $request)
         $postulantexp->persona_referencia = $request->persona_referencia;
         $postulantexp->area = $request->area;
         $postulantexp->contacto = $request->contacto;
-    
+
         if ($request->fechaini && $request->fechafin) {
             $fecha1 = new DateTime($request->fechaini);
             $fecha2 = new DateTime($request->fechafin);
@@ -551,25 +561,25 @@ public function registroHabilidad(Request $request)
             $postulantexp->mes_e = 0;
             $postulantexp->anios_e = 0;
         }
-    
+
         $postulantexp->save();
         return response()->json(['message' => 'Experiencia agregada exitosamente', $postulantexp], 201);
     }
-    
-    
+
+
     public function getExperiencia($id_usuario)
     {
         // Validar que el ID de usuario sea un número entero
         if (!is_numeric($id_usuario) || intval($id_usuario) <= 0) {
             return response()->json(['message' => 'ID de usuario inválido'], 400);
         }
-    
+
         try {
             $postulante = Postulante::where('id_usuario', $id_usuario)->first();
             if (!$postulante) {
                 return response()->json(['message' => 'Postulante no encontrado'], 404);
             }
-    
+
             $experiencias = FormacionPro::where('id_postulante', $postulante->id_postulante)->get();
             return response()->json(['experiencias' => $experiencias], 200);
         } catch (\Exception $e) {
@@ -591,7 +601,7 @@ public function registroHabilidad(Request $request)
             return response()->json(['message' => 'Error al recuperar la experiencia'], 500);
         }
     }
-    
+
 
 
 
@@ -605,7 +615,7 @@ public function registroHabilidad(Request $request)
 
             $response = [
                 'postulante' => $postulante,
-                
+
             ];
 
             return response()->json($response);
@@ -614,10 +624,11 @@ public function registroHabilidad(Request $request)
         }
     }
 
-    public function updateExperiencia(Request $request){
+    public function updateExperiencia(Request $request)
+    {
         try {
             DB::beginTransaction();
-    
+
             $idPostulante = $request->input('id_postulante');
             $idExperiencia = $request->input('id_experiencia');
             $empresa = $request->input('empresa');
@@ -628,7 +639,7 @@ public function registroHabilidad(Request $request)
             $persona_referencia = $request->input('persona_referencia');
             $area = $request->input('area');
             $contacto = $request->input('contacto');
-    
+
             // Actualizar los datos de la experiencia
             DB::table('formacion_profesional')
                 ->where('id_postulante', $idPostulante)
@@ -643,9 +654,9 @@ public function registroHabilidad(Request $request)
                     'area' => $area,
                     'contacto' => $contacto,
                 ]);
-    
+
             DB::commit();
-    
+
             return response()->json(['message' => 'Experiencia actualizada exitosamente.']);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -654,52 +665,52 @@ public function registroHabilidad(Request $request)
     }
 
     public function deleteExperiencia($id)
-{
-    try {
-        $experiencia = FormacionPro::find($id);
+    {
+        try {
+            $experiencia = FormacionPro::find($id);
 
-        if (!$experiencia) {
-            return response()->json(['message' => 'Experiencia no encontrada'], 404);
+            if (!$experiencia) {
+                return response()->json(['message' => 'Experiencia no encontrada'], 404);
+            }
+
+            $experiencia->delete();
+
+            return response()->json(['message' => 'Experiencia eliminada exitosamente'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminar la experiencia'], 500);
+        }
+    }
+
+    public function getProfileImage($userId)
+    {
+        // Obtén la URL de la imagen desde la base de datos usando el ID del usuario
+        $postulante = Postulante::where('id_usuario', $userId)->first();
+
+        if (!$postulante || !$postulante->foto) {
+            return response('No se encontró la imagen del perfil.', 404);
         }
 
-        $experiencia->delete();
+        $firebaseImageUrl = $postulante->foto;
 
-        return response()->json(['message' => 'Experiencia eliminada exitosamente'], 200);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Error al eliminar la experiencia'], 500);
-    }
-}
+        // Descarga la imagen desde Firebase Storage
+        $response = Http::get($firebaseImageUrl);
 
-public function getProfileImage($userId)
-{
-    // Obtén la URL de la imagen desde la base de datos usando el ID del usuario
-    $postulante = Postulante::where('id_usuario', $userId)->first();
-
-    if (!$postulante || !$postulante->foto) {
-        return response('No se encontró la imagen del perfil.', 404);
+        if ($response->ok()) {
+            // Retorna la imagen como respuesta
+            return response($response->body(), 200)->header('Content-Type', $response->header('Content-Type'));
+        } else {
+            // Maneja el error si no se puede descargar la imagen
+            return response('No se pudo descargar la imagen.', 404);
+        }
     }
 
-    $firebaseImageUrl = $postulante->foto;
-
-    // Descarga la imagen desde Firebase Storage
-    $response = Http::get($firebaseImageUrl);
-
-    if ($response->ok()) {
-        // Retorna la imagen como respuesta
-        return response($response->body(), 200)->header('Content-Type', $response->header('Content-Type'));
-    } else {
-        // Maneja el error si no se puede descargar la imagen
-        return response('No se pudo descargar la imagen.', 404);
-    }
-}
-
-public function updateCV($userId, Request $request)
+    public function updateCV($userId, Request $request)
     {
         // Validar y obtener el URL del CV desde el request
         $request->validate([
             'cv' => 'required|string', // Asegúrate de validar que el CV sea una URL válida
         ]);
-        
+
         $cvUrl = $request->input('cv');
 
         // Obtén el postulante por el id_usuario
@@ -717,133 +728,127 @@ public function updateCV($userId, Request $request)
     }
 
     public function checkCv($id_postulante)
-{
-    $postulante = Postulante::where('id_usuario', $id_postulante)->first();
+    {
+        $postulante = Postulante::where('id_usuario', $id_postulante)->first();
 
-    if ($postulante && $postulante->hasCv()) {
-        return response()->json(['hasCv' => true], 200);
-    } else {
-        return response()->json(['hasCv' => false, 'message' => 'No has subido tu CV.'], 400);
-    }
-}
-  //Buscar postulante por el nombre
-  public function searchPostulante (Request $request) {
-    try {
-
-        $nombreApellido = $request->input('nombre_apellido');
-        
-         $postulantes = Postulante::where('nombres', 'like', $nombreApellido . '%')
-                ->orWhere('apellidos', 'like', $nombreApellido . '%')
-                    ->get();
-        
-        if($postulantes->isEmpty()) {
-            return response()->json([
-                'message' => 'No se encontró al usuario',
-
-            ], 404);
+        if ($postulante && $postulante->hasCv()) {
+            return response()->json(['hasCv' => true], 200);
+        } else {
+            return response()->json(['hasCv' => false, 'message' => 'No has subido tu CV.'], 400);
         }
-        return response($postulantes);
-
-
-    } catch (\Throwable $th) {
-        return response()->json([
-            'message' => 'No se pudo buscar al postulante',
-            'error' => $th->getMessage()
-        ], 500);
     }
-}
+    //Buscar postulante por el nombre
+    public function searchPostulante(Request $request)
+    {
+        try {
 
-//Traer todos los datos del postulante por el ID
-public function getPostulanteData ($idPostulante) {
-    try {
-        $postulante = Postulante::with('idiomas')->findOrFail($idPostulante);
-        return response()->json($postulante);
+            $nombreApellido = $request->input('nombre_apellido');
 
-    } catch (\Throwable $th) {
-        return response()->json([
-            'message' => 'No se pudo traer los datos del postulante',
-            'error' => $th->getMessage()
-        ], 500);
+            $postulantes = Postulante::where('nombres', 'like', $nombreApellido . '%')
+                ->orWhere('apellidos', 'like', $nombreApellido . '%')
+                ->get();
+
+            if ($postulantes->isEmpty()) {
+                return response()->json([
+                    'message' => 'No se encontró al usuario',
+
+                ], 404);
+            }
+            return response($postulantes);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'No se pudo buscar al postulante',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
-}
+
+    //Traer todos los datos del postulante por el ID
+    public function getPostulanteData($idPostulante)
+    {
+        try {
+            $postulante = Postulante::with('idiomas')->findOrFail($idPostulante);
+            return response()->json($postulante);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'No se pudo traer los datos del postulante',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
 
 
 
-public function getPostulanteById($id_postulante)
-{
-    try {
-        $postulante = DB::table('postulante')
-            ->where('id_postulante', $id_postulante)
-            ->first();
+    public function getPostulanteById($id_postulante)
+    {
+        try {
+            $postulante = DB::table('postulante')
+                ->where('id_postulante', $id_postulante)
+                ->first();
+
+            if (!$postulante) {
+                return response()->json(['message' => 'Postulante no encontrado'], 404);
+            }
+
+            $usuario = DB::table('users')->where('id', $postulante->id_usuario)->first();
+            $ubicacion = DB::table('ubicacion')->where('id', $postulante->id_ubicacion)->first();
+            $formaciones = DB::table('formacion_academica')->where('id_postulante', $id_postulante)->get();
+            $titulos = DB::table('formacion_academica')
+                ->join('titulo', 'formacion_academica.id_titulo', '=', 'titulo.id')
+                ->where('formacion_academica.id_postulante', $id_postulante)
+                ->select('titulo.*')
+                ->get();
+            $idiomas = DB::table('postulante_idioma')
+                ->join('idioma', 'postulante_idioma.id_idioma', '=', 'idioma.id')
+                ->where('postulante_idioma.id_postulante', $id_postulante)
+                ->select('postulante_idioma.*', 'idioma.nombre as idioma_nombre')
+                ->get();
+            $red = DB::table('postulante_red')->where('id_postulante', $id_postulante)->get();
+            $postulaciones = DB::table('postulacion')->where('id_postulante', $id_postulante)->get();
+            $formapro = DB::table('formacion_profesional')->where('id_postulante', $id_postulante)->get();
+            $certificados = DB::table('certificado')->where('id_postulante', $id_postulante)->get();
+
+            return response()->json([
+                'postulante' => $postulante,
+                'usuario' => $usuario,
+                'ubicacion' => $ubicacion,
+                'formaciones' => $formaciones,
+                'titulos' => $titulos,
+                'idiomas' => $idiomas,
+                'red' => $red,
+                'postulaciones' => $postulaciones,
+                'formapro' => $formapro,
+                'certificados' => $certificados,
+                'cv' => $postulante->cv,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al obtener el postulante', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updateProfilePicture(Request $request, $id_Postulante)
+    {
+        // Validar que la URL de la foto esté presente en la solicitud
+        $request->validate([
+            'foto' => 'required|string',
+        ]);
+
+        // Obtener el postulante por el id_postulante
+        $postulante = Postulante::find($id_Postulante);
 
         if (!$postulante) {
-            return response()->json(['message' => 'Postulante no encontrado'], 404);
+            return response()->json(['error' => 'No se encontró el postulante.'], 404);
         }
 
-        $usuario = DB::table('users')->where('id', $postulante->id_usuario)->first();
-        $ubicacion = DB::table('ubicacion')->where('id', $postulante->id_ubicacion)->first();
-        $formaciones = DB::table('formacion_academica')->where('id_postulante', $id_postulante)->get();
-        $titulos = DB::table('formacion_academica')
-            ->join('titulo', 'formacion_academica.id_titulo', '=', 'titulo.id')
-            ->where('formacion_academica.id_postulante', $id_postulante)
-            ->select('titulo.*')
-            ->get();
-        $idiomas = DB::table('postulante_idioma')
-            ->join('idioma', 'postulante_idioma.id_idioma', '=', 'idioma.id')
-            ->where('postulante_idioma.id_postulante', $id_postulante)
-            ->select('postulante_idioma.*', 'idioma.nombre as idioma_nombre')
-            ->get();
-        $red = DB::table('postulante_red')->where('id_postulante', $id_postulante)->get();
-        $postulaciones = DB::table('postulacion')->where('id_postulante', $id_postulante)->get();
-        $formapro = DB::table('formacion_profesional')->where('id_postulante', $id_postulante)->get();
-        $certificados = DB::table('certificado')->where('id_postulante', $id_postulante)->get();
+        // Actualizar el campo foto del postulante con la nueva URL
+        $postulante->foto = $request->input('foto');
+        $postulante->save();
 
-        return response()->json([
-            'postulante' => $postulante,
-            'usuario' => $usuario,
-            'ubicacion' => $ubicacion,
-            'formaciones' => $formaciones,
-            'titulos' => $titulos,
-            'idiomas' => $idiomas,
-            'red' => $red,
-            'postulaciones' => $postulaciones,
-            'formapro' => $formapro,
-            'certificados' => $certificados,
-            'cv' => $postulante->cv,
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Error al obtener el postulante', 'error' => $e->getMessage()], 500);
-    }
-}
-
-public function updateProfilePicture(Request $request, $id_Postulante)
-{
-    // Validar que la URL de la foto esté presente en la solicitud
-    $request->validate([
-        'foto' => 'required|string',
-    ]);
-
-    // Obtener el postulante por el id_postulante
-    $postulante = Postulante::find($id_Postulante);
-
-    if (!$postulante) {
-        return response()->json(['error' => 'No se encontró el postulante.'], 404);
+        return response()->json(['message' => 'Foto de perfil actualizada correctamente.', 'postulante' => $postulante], 200);
     }
 
-    // Actualizar el campo foto del postulante con la nueva URL
-    $postulante->foto = $request->input('foto');
-    $postulante->save();
-
-    return response()->json(['message' => 'Foto de perfil actualizada correctamente.', 'postulante' => $postulante], 200);
-}
-
-    public function updateProfile () {
+    public function updateProfile()
+    {
         return response()->json('xd');
     }
-
-
-
 }
-
-
-

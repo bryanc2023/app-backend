@@ -13,10 +13,12 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
+    # En tu archivo de comandos (por ejemplo, app/Console/Kernel.php)
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('ofertas:actualizar-estado')->daily();
     }
+
 
     /**
      * Register the commands for the application.
