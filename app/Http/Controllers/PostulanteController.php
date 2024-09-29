@@ -519,7 +519,7 @@ public function registroHabilidad(Request $request)
             'puesto' => 'required|string|max:100',
             'fecha_ini' => 'nullable|date',
             'fecha_fin' => 'nullable|date',
-            'descripcion_responsabilidades' => 'required|string|max:500',
+            'descripcion_responsabilidades' => 'required|string',
             'persona_referencia' => 'required|string|max:250',
             'area'=> 'required|string|max:250',
             'contacto'=> 'required|string|max:250'

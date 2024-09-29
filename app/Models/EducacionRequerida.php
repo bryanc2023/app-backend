@@ -17,7 +17,6 @@ class EducacionRequerida extends Model
         'id_oferta',
         'id_titulo',
         'prioridad',
-        'titulo_per',
         'titulo_per2'
        
     ];
