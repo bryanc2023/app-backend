@@ -35,4 +35,21 @@ class PostulanteRedController extends Controller
 
         return response()->json($postulanteReds, 200);
     }
+
+    public function deletePostulanteRed($id_postulante_red)
+{
+    // Busca la red por su ID
+    $postulanteRed = PostulanteRed::find($id_postulante_red);
+
+    // Si no se encuentra la red, devuelve un error
+    if (!$postulanteRed) {
+        return response()->json(['message' => 'Red social no encontrada'], 404);
+    }
+
+    // Elimina la red
+    $postulanteRed->delete();
+
+    // Responde con un mensaje de éxito
+    return response()->json(['message' => 'Red social eliminada exitosamente'], 200);
+}
 }
