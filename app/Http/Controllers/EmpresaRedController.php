@@ -29,4 +29,17 @@ class EmpresaRedController extends Controller
         $redes = EmpresaRed::where('id_empresa', $id_empresa)->get();
         return response()->json($redes);
     }
+
+    public function eliminarRedEmpresa($id)
+    {
+        $empresaRed = EmpresaRed::find($id);
+
+        if (!$empresaRed) {
+            return response()->json(['message' => 'Red de empresa no encontrada'], 404);
+        }
+
+        $empresaRed->delete();
+
+        return response()->json(['message' => 'Red de empresa eliminada exitosamente'], 200);
+    }
 }
