@@ -368,6 +368,8 @@ class PostulacionController extends Controller
                                     'empresa' => $formacion->empresa,
                                     'anios_e' => $formacion->anios_e,
                                     'mes_e' => $formacion->mes_e,
+                                    'fecha_ini' => $formacion->fecha_ini,
+                                    'fecha_fin' => $formacion->fecha_fin,
                                 ];
                             }),
                             'titulos' => $postulacion->postulante->formaciones->map(function ($titulo) {
