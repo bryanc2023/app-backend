@@ -53,6 +53,7 @@ class OfertaController extends Controller
             'comentariosComisiones' => 'string|nullable|max:800',
             'comentariosHorasExtras' => 'string|nullable|max:800',
             'comentariosViaticos' => 'string|nullable|max:800',
+            'experienciaEnMeses' => 'boolean',
         ]);
         // Buscar el usuario por ID
         $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
@@ -91,6 +92,7 @@ class OfertaController extends Controller
         $oferta->comentariosComisiones = $validatedData['comentariosComisiones'];
         $oferta->comentariosHorasExtras = $validatedData['comentariosHorasExtras'];
         $oferta->comentariosViaticos = $validatedData['comentariosViaticos'];
+        $oferta->exp_m = $validatedData['experienciaEnMeses'];
         $oferta->save();
 
 
@@ -171,6 +173,7 @@ class OfertaController extends Controller
             'comentariosComisiones' => 'string|nullable|max:800',
             'comentariosHorasExtras' => 'string|nullable|max:800',
             'comentariosViaticos' => 'string|nullable|max:800',
+            'experienciaEnMeses' => 'boolean',
         ]);
 
         // Actualizar la oferta con los datos validados
@@ -196,6 +199,7 @@ class OfertaController extends Controller
             'comentariosComisiones' => $validatedData['comentariosComisiones'],
             'comentariosHorasExtras' => $validatedData['comentariosHorasExtras'],
             'comentariosViaticos' => $validatedData['comentariosViaticos'],
+            'exp_m' =>  $validatedData['experienciaEnMeses'],
         ]);
 
         // Actualizar las relaciones (titulos y criterios) si se proporcionan
