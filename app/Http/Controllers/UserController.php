@@ -74,4 +74,19 @@ class UserController extends Controller
         return response()->json(['has_first_login' => $hasFirstLogin]);
     }
 
+    public function updateStatus(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        // Cambiar el estado 'is_active' basado en lo que se reciba desde el frontend
+        $user->is_active = $request->input('is_active');
+        $user->save();
+
+        return response()->json(['message' => 'Estado del usuario actualizado con éxito']);
+    }
+
 }

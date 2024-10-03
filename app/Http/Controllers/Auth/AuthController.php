@@ -66,29 +66,39 @@ class AuthController extends Controller
      
     }
 
-    public function login(LoginRequest $request){
-        $credentials = $request->only('email','password');
-    
-        if(!$token = JWTAuth::attempt($credentials)){
-            return response()->json(['error'=>'Credenciales invalidas'],401);
-        }
-    
-        $user = User::with('role')->where('email', $request->email)->first();
-    
-        if (!$user) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
-        }
-    
-        if (!$user->hasVerifiedEmail()) {
-            return response()->json(['error' => 'Por favor, verifica tu correo electrónico primero'], 403);
-        }
-    
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-            'role' => $user->role ? $user->role->name : 'Sin rol asignado'  // Verifica que $user->role no sea null
-        ], 200);
+    public function login(LoginRequest $request)
+{
+    $credentials = $request->only('email', 'password');
+
+    // Intentar autenticar al usuario con las credenciales proporcionadas
+    if (!$token = JWTAuth::attempt($credentials)) {
+        return response()->json(['error' => 'Credenciales inválidas'], 401);
     }
+
+    // Obtener al usuario autenticado
+    $user = User::with('role')->where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json(['error' => 'Usuario no encontrado'], 404);
+    }
+
+    // Verificar si el usuario está activo
+    if (!$user->is_active) {
+        return response()->json(['error' => 'Tu cuenta ha sido desactivada. Contacta al administrador.'], 403);
+    }
+
+    // Verificar si el email ha sido verificado
+    if (!$user->hasVerifiedEmail()) {
+        return response()->json(['error' => 'Por favor, verifica tu correo electrónico primero'], 403);
+    }
+
+    return response()->json([
+        'user' => $user,
+        'token' => $token,
+        'role' => $user->role ? $user->role->name : 'Sin rol asignado',  // Verifica que $user->role no sea null
+    ], 200);
+}
+
     
 
     public function loginEmpresa(LoginRequest $request){
