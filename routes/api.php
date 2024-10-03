@@ -45,6 +45,7 @@ Route::prefix('auth')->group(function(){
 });
 
 Route::post('ResetPassword3', [UserController::class, 'resetPassword']);
+Route::put('/users/{id}/status', [UserController::class, 'updateStatus']);
 Route::post('reset-password', [ResetPasswordController::class, 'resetPassword']);
 Route::middleware(['jwt.verify'])->get('users',[UserController::class,'index']);
 
