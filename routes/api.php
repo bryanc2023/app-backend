@@ -86,6 +86,7 @@ Route::post('/updateIdiomas', [UploadController::class, 'updateIdiomas']);
 
 Route::get('/ubicaciones', [UbicacionController::class, 'getProvinciasCantones']);
 Route::get('/ubicaciones/cantones/{province}', [UbicacionController::class, 'getCantonesPorProvincia']);
+Route::get('/ubicaciones/cantonesID/{province}', [UbicacionController::class, 'getCantonesID']);
 Route::get('/ubicaciones/cantonesid/{province}', [UbicacionController::class, 'getCantonesPorProvinciaID']);
 Route::get('/ubicaciones/{provincia}/{canton}', [UbicacionController::class, 'getUbicacionId']);
 

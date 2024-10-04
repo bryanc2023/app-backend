@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Empresa;
 use App\Models\EmpresaRed;
 use App\Models\SectorEconomico;
+use App\Models\Ubicacion;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -17,21 +18,20 @@ class EmpresaController extends Controller
         $empresa->id_ubicacion = $request->ubicacion;
         $empresa->id_usuario = $request->usuario_id;
         if ($request->sector == '0') {
-             // Si es un string, crear un nuevo sector en la base de datos
-             $nuevoSector = SectorEconomico::create([
+            // Si es un string, crear un nuevo sector en la base de datos
+            $nuevoSector = SectorEconomico::create([
                 'sector' => 'OTRO',
                 'division' => $request->division,
             ]);
-        
+
             // Asignar el ID del nuevo sector a la empresa
             $empresa->id_sector = $nuevoSector->id;
-           
         } else {
             $empresa->id_sector = $request->sector;
         }
-      
+
         $empresa->nombre_comercial = $request->companyName;
-        
+
         // Obtener el número de empleados
         $numberOfEmployees = $request->input('numberOfEmployees');
 
@@ -99,7 +99,6 @@ class EmpresaController extends Controller
             ])->where('id_usuario', $idUser)->first();
 
             return response()->json($empresa);
-
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Empresa no encontrada',
@@ -148,22 +147,26 @@ class EmpresaController extends Controller
                 if ($sector) {
                     $empresa->id_sector = $sector->id;
                 }
-            }else if ($request->has('customSector') && !empty($request->input('customSector'))) {
+                    // Guardar los cambios de la empresa
+            } 
+           if ($request->has('customDivision') && !empty($request->input('customDivision'))) {
+                // Crear un nuevo sector si se proporciona un customDivision
                 $nuevoSector = SectorEconomico::create([
-                    'sector' => 'OTRO',
-                    'division' => $request->input('customSector')
+                    'sector' => 'OTRO', // Aquí puedes cambiar 'OTRO' según sea necesario
+                    'division' => $request->input('customDivision'),
                 ]);
                 // Asignar el nuevo sector a la empresa
                 $empresa->id_sector = $nuevoSector->id;
+                    // Guardar los cambios de la empresa
             }
 
+        
+
             // Actualizar la ubicación si está presente en el request
-            if ($request->has('ubicacion')) {
-                $ubicacion = $empresa->ubicacion()->first();
+            if ($request->has('canton')) {
+                $ubicacion = Ubicacion::find($request->input('canton'));
                 if ($ubicacion) {
-                    $ubicacion->provincia = $request->input('ubicacion.provincia', $ubicacion->provincia);
-                    $ubicacion->canton = $request->input('ubicacion.canton', $ubicacion->canton);
-                    $ubicacion->save();
+                    $empresa->id_ubicacion = $ubicacion->id;
                 }
             }
 
@@ -173,7 +176,6 @@ class EmpresaController extends Controller
                 'message' => 'Empresa actualizada correctamente',
                 'empresa' => $empresa
             ]);
-
         } catch (\Throwable $th) {
             Log::error('Error al actualizar la empresa: ' . $th->getMessage());
             return response()->json([
@@ -203,7 +205,7 @@ class EmpresaController extends Controller
             $nombreComercial = $request->input('nombre_comercial');
 
             // Realizar la búsqueda con el comodín correcto
-            $empresa = Empresa::where('nombre_comercial', 'like', $nombreComercial.'%')->get();
+            $empresa = Empresa::where('nombre_comercial', 'like', $nombreComercial . '%')->get();
 
             // Verificar si no se encontraron empresas
             if ($empresa->isEmpty()) {
@@ -214,7 +216,6 @@ class EmpresaController extends Controller
 
             // Devolver las empresas encontradas
             return response()->json($empresa);
-
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Error al buscar la empresa',
@@ -229,11 +230,11 @@ class EmpresaController extends Controller
         try {
             // Obtén los datos de la empresa junto con sus relaciones
             $empresa = Empresa::with(['usuario', 'ubicacion', 'sector', 'ofertas', 'red'])->find($id_empresa);
-    
+
             if (!$empresa) {
                 return response()->json(['message' => 'Empresa no encontrada'], 404);
             }
-    
+
             return response()->json($empresa);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al obtener la empresa', 'error' => $e->getMessage()], 500);
@@ -265,5 +266,4 @@ class EmpresaController extends Controller
             return response()->json(['message' => 'Error al actualizar el logo', 'error' => $e->getMessage()], 500);
         }
     }
- }
-
+}
