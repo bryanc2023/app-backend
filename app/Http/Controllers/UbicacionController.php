@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\StringHelper;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
 
@@ -28,8 +29,23 @@ class UbicacionController extends Controller
     {
         $cantons = Ubicacion::where('provincia', $province)->distinct()->pluck('canton');
         
+        
         return response()->json($cantons);
     }
+
+    public function getCantonesID($province)
+    {
+        
+        $textoSinTildes = StringHelper::removeAccents($province);
+        // Obtener las divisiones con el sector normalizado
+        $cantons = Ubicacion::whereRaw('LOWER(REPLACE(provincia, " ", "")) = LOWER(REPLACE(?, " ", ""))', [$textoSinTildes])
+            ->select('id', 'canton')
+            ->distinct()
+            ->get();
+
+        return response()->json($cantons);
+    }
+
     public function getCantonesPorProvinciaID($province)
     {
         $cantons = Ubicacion::where('provincia', $province)
