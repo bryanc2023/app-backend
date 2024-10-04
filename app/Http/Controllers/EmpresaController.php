@@ -143,13 +143,18 @@ class EmpresaController extends Controller
             }
 
             // Actualizar el sector si está presente en el request
-            if ($request->has('sector')) {
-                $sector = $empresa->sector()->first();
+            if ($request->has('division')) {
+                $sector = SectorEconomico::find($request->input('division'));
                 if ($sector) {
-                    $sector->sector = $request->input('sector.sector', $sector->sector);
-                    $sector->division = $request->input('sector.division', $sector->division);
-                    $sector->save();
+                    $empresa->id_sector = $sector->id;
                 }
+            }else if ($request->has('customSector') && !empty($request->input('customSector'))) {
+                $nuevoSector = SectorEconomico::create([
+                    'sector' => 'OTRO',
+                    'division' => $request->input('customSector')
+                ]);
+                // Asignar el nuevo sector a la empresa
+                $empresa->id_sector = $nuevoSector->id;
             }
 
             // Actualizar la ubicación si está presente en el request
