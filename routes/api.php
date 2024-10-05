@@ -150,6 +150,7 @@ Route::get('/areas', [AreaController::class, 'getAreas']);
 Route::get('/criterios', [CriterioController::class, 'getCriterios']);
 Route::post('add-oferta', [OfertaController::class, 'registerOferta']);
 Route::get('oferta/{id}', [OfertaController::class, 'getOfertaById']);
+
 Route::put('update-oferta/{id}', [OfertaController::class, 'updateOferta']);
 Route::delete('/oferta/{id}', [OfertaController::class, 'deleteOferta']);
 Route::put('/updatePostulanteById/{id}', [PostulanteController::class, 'updatePostulanteByIdUser']);
@@ -197,6 +198,7 @@ Route::post('/notificacionesL', [NotificacionesController::class, 'marcarTodasLe
 
 
 Route::get('empresa/{idEmpresa}/ofertas', [OfertaController::class, 'getOfertasByEmpresa']);
+Route::get('/empresa/cantidaddest/{usuario}', [EmpresaController::class, 'getCantidadDest']);
 Route::get('/ofertas', [OfertaController::class, 'getAllOfertas']);
 Route::post('/pos', [PostulacionController::class, 'verPostulante']);
 
@@ -230,6 +232,7 @@ Route::get('/criteriosAll', [CriterioController::class, 'index']);
 
 });
 Route::get('ofertaHome', [OfertaController::class, 'getOfertasInicio']);
+Route::get('/destacadas', [OfertaController::class, 'getLatestDestacadas']);
 
 Route::middleware('auth:api')->group(function () {
   // Aquí van las rutas protegidas por JWT

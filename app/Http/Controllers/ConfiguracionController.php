@@ -22,6 +22,14 @@ class ConfiguracionController extends Controller
             'valor_prioridad_media' => 'required|integer',
             'valor_prioridad_baja' => 'required|integer',
             'terminos_condiciones' => 'nullable|string',
+            'gratis_ofer'=> 'required|integer',
+            'gratis_d'=> 'required|integer',
+            'estandar_ofer'=> 'required|integer',
+            'estandar_d'=> 'required|integer',
+            'premium_ofer'=> 'required|integer',
+            'premiun_d'=> 'required|integer',
+            'u_ofer'=> 'required|integer',
+            'u_d'=> 'required|integer',
             
         ]);
 

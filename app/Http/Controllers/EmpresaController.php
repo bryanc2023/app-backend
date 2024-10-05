@@ -147,9 +147,9 @@ class EmpresaController extends Controller
                 if ($sector) {
                     $empresa->id_sector = $sector->id;
                 }
-                    // Guardar los cambios de la empresa
-            } 
-           if ($request->has('customDivision') && !empty($request->input('customDivision'))) {
+                // Guardar los cambios de la empresa
+            }
+            if ($request->has('customDivision') && !empty($request->input('customDivision'))) {
                 // Crear un nuevo sector si se proporciona un customDivision
                 $nuevoSector = SectorEconomico::create([
                     'sector' => 'OTRO', // Aquí puedes cambiar 'OTRO' según sea necesario
@@ -157,10 +157,10 @@ class EmpresaController extends Controller
                 ]);
                 // Asignar el nuevo sector a la empresa
                 $empresa->id_sector = $nuevoSector->id;
-                    // Guardar los cambios de la empresa
+                // Guardar los cambios de la empresa
             }
 
-        
+
 
             // Actualizar la ubicación si está presente en el request
             if ($request->has('canton')) {
@@ -265,5 +265,28 @@ class EmpresaController extends Controller
             Log::error('Error al actualizar el logo de la empresa: ' . $e->getMessage());
             return response()->json(['message' => 'Error al actualizar el logo', 'error' => $e->getMessage()], 500);
         }
+    }
+
+    public function getCantidadDest($usuario)
+    {
+        // Obtener el id de la empresa por el id del usuario
+        $user = Empresa::getIdEmpresaPorIdUsuario($usuario);
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        // Buscar la empresa utilizando el ID obtenido
+        $empresa = Empresa::find($user); // Asegúrate de que el campo correcto es 'id_empresa'
+
+        if (!$empresa) {
+            return response()->json(['error' => 'Empresa no encontrada'], 404);
+        }
+
+        // Obtener el campo deseado de la empresa
+        $cantidadDest = $empresa->cantidad_dest; // Reemplaza 'campo' por el nombre del campo que necesitas
+        $plan = $empresa->plan; // Campo plan
+
+        return response()->json(['cantidad_dest' => $cantidadDest, 'plan' => $plan], 200);
     }
 }

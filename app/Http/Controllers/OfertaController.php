@@ -49,11 +49,15 @@ class OfertaController extends Controller
             'preguntas.*' => 'string|max:400',
             'comisiones' => 'nullable|numeric',
             'horasExtras' => 'nullable|numeric',
-            'viaticos'=> 'nullable|numeric',
+            'viaticos' => 'nullable|numeric',
             'comentariosComisiones' => 'string|nullable|max:800',
             'comentariosHorasExtras' => 'string|nullable|max:800',
             'comentariosViaticos' => 'string|nullable|max:800',
             'experienciaEnMeses' => 'boolean',
+            'destacada' => 'boolean',
+            'ciudad' => 'nullable|string',
+            'empresa_p' => 'nullable|string',
+            'sector_p' => 'nullable|string',
         ]);
         // Buscar el usuario por ID
         $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
@@ -93,7 +97,18 @@ class OfertaController extends Controller
         $oferta->comentariosHorasExtras = $validatedData['comentariosHorasExtras'];
         $oferta->comentariosViaticos = $validatedData['comentariosViaticos'];
         $oferta->exp_m = $validatedData['experienciaEnMeses'];
+        $oferta->dest = $validatedData['destacada'];
+        $oferta->ciudad = $validatedData['ciudad'];
+        $oferta->empre_p= $validatedData['empresa_p'];
+        $oferta->sector_p = $validatedData['sector_p'];
         $oferta->save();
+
+        // Si 'destacada' es verdadero, incrementar la columna 'cantidad_dest'
+        if ($validatedData['destacada']) {
+            $empresa = Empresa::find($user);
+            $empresa->cantidad_dest = $empresa->cantidad_dest + 1; // Incrementar en 1
+            $empresa->save(); // Guardar los cambios
+        }
 
 
 
@@ -166,15 +181,30 @@ class OfertaController extends Controller
             'criterios.*.valor' => 'string|nullable|max:255',
             'criterios.*.prioridad' => 'integer|between:1,3',
             'preguntas' => 'nullable|array',
-           'preguntas.*' => 'string|max:400',
-           'comisiones' => 'nullable|numeric',
+            'preguntas.*' => 'string|max:400',
+            'comisiones' => 'nullable|numeric',
             'horasExtras' => 'nullable|numeric',
-            'viaticos'=> 'nullable|numeric',
+            'viaticos' => 'nullable|numeric',
             'comentariosComisiones' => 'string|nullable|max:800',
             'comentariosHorasExtras' => 'string|nullable|max:800',
             'comentariosViaticos' => 'string|nullable|max:800',
             'experienciaEnMeses' => 'boolean',
+            'destacada' => 'boolean',
+            'ciudad' => 'nullable|string',
+            'usuario' => 'required|integer',
+            'empresa_p' => 'nullable|string',
+            'sector_p' => 'nullable|string',
         ]);
+
+        $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+
+         // Obtener el valor de 'dest' antes de actualizar
+    $wasDestacada = $oferta->dest;
+
 
         // Actualizar la oferta con los datos validados
         $oferta->update([
@@ -193,20 +223,38 @@ class OfertaController extends Controller
             'funciones' => $validatedData['funciones'],
             'modalidad' => $validatedData['modalidad'],
             'carga_horaria' => $validatedData['carga_horaria'],
-            'comisiones'=> $validatedData['comisiones'],
-            'horasExtras'=> $validatedData['horasExtras'],
-            'viaticos'=> $validatedData['viaticos'],
+            'comisiones' => $validatedData['comisiones'],
+            'horasExtras' => $validatedData['horasExtras'],
+            'viaticos' => $validatedData['viaticos'],
             'comentariosComisiones' => $validatedData['comentariosComisiones'],
             'comentariosHorasExtras' => $validatedData['comentariosHorasExtras'],
             'comentariosViaticos' => $validatedData['comentariosViaticos'],
             'exp_m' =>  $validatedData['experienciaEnMeses'],
+            'dest' =>  $validatedData['destacada'],
+            'ciudad' => $validatedData['ciudad'],
+            'empre_p' => $validatedData['empresa_p'],
+            'sector_p' => $validatedData['sector_p'],
         ]);
+
+         // Verificar si el valor anterior era true y ahora es false
+    if ($wasDestacada && !$validatedData['destacada']) {
+        $empresa = Empresa::find($user);
+        $empresa->cantidad_dest = $empresa->cantidad_dest - 1; // Restar 1
+        $empresa->save();
+    }
+
+    // Si la nueva oferta es destacada y antes no lo era, sumar 1
+    if (!$wasDestacada && $validatedData['destacada']) {
+        $empresa = Empresa::find($user);
+        $empresa->cantidad_dest = $empresa->cantidad_dest + 1; // Incrementar en 1
+        $empresa->save();
+    }
 
         // Actualizar las relaciones (titulos y criterios) si se proporcionan
         if ($request->has('titulos')) {
             // Sincronizar los títulos con la tabla `educacion_requerida`
             $oferta->expe()->sync(array_map(function ($titulo) {
-                return ['id_titulo' => $titulo['id'],'titulo_per2' => $titulo['customTitulo']];
+                return ['id_titulo' => $titulo['id'], 'titulo_per2' => $titulo['customTitulo']];
             }, $request->titulos));
         }
 
@@ -225,34 +273,34 @@ class OfertaController extends Controller
             }
         }
 
-  // Actualizar las preguntas
-  if ($request->has('preguntas')) {
-    $preguntasActuales = Pregunta::where('id_oferta', $oferta->id_oferta)->get();
+        // Actualizar las preguntas
+        if ($request->has('preguntas')) {
+            $preguntasActuales = Pregunta::where('id_oferta', $oferta->id_oferta)->get();
 
-    $nuevasPreguntas = array_map('trim', $validatedData['preguntas']);
+            $nuevasPreguntas = array_map('trim', $validatedData['preguntas']);
 
-    // Eliminar preguntas que ya no están en la lista nueva
-    foreach ($preguntasActuales as $preguntaActual) {
-        if (!in_array($preguntaActual->pregunta, $nuevasPreguntas)) {
-            $preguntaActual->delete();
+            // Eliminar preguntas que ya no están en la lista nueva
+            foreach ($preguntasActuales as $preguntaActual) {
+                if (!in_array($preguntaActual->pregunta, $nuevasPreguntas)) {
+                    $preguntaActual->delete();
+                } else {
+                    // Actualizar las preguntas existentes
+                    $preguntaActual->update(['pregunta' => $preguntaActual->pregunta]);
+                    $nuevasPreguntas = array_diff($nuevasPreguntas, [$preguntaActual->pregunta]);
+                }
+            }
+
+            // Añadir las nuevas preguntas
+            foreach ($nuevasPreguntas as $preguntaTexto) {
+                Pregunta::create([
+                    'id_oferta' => $oferta->id_oferta,
+                    'pregunta' => $preguntaTexto,
+                ]);
+            }
         } else {
-            // Actualizar las preguntas existentes
-            $preguntaActual->update(['pregunta' => $preguntaActual->pregunta]);
-            $nuevasPreguntas = array_diff($nuevasPreguntas, [$preguntaActual->pregunta]);
+            // Si no se envían preguntas, eliminarlas todas
+            Pregunta::where('id_oferta', $oferta->id_oferta)->delete();
         }
-    }
-
-    // Añadir las nuevas preguntas
-    foreach ($nuevasPreguntas as $preguntaTexto) {
-        Pregunta::create([
-            'id_oferta' => $oferta->id_oferta,
-            'pregunta' => $preguntaTexto,
-        ]);
-    }
-} else {
-    // Si no se envían preguntas, eliminarlas todas
-    Pregunta::where('id_oferta', $oferta->id_oferta)->delete();
-}
 
 
         return response()->json(['message' => 'Oferta actualizada exitosamente']);
@@ -286,7 +334,7 @@ class OfertaController extends Controller
         }
 
         $query = Oferta::where('id_empresa', $user)
-            ->with(['areas', 'criterios', 'expe','preguntas']);
+            ->with(['areas', 'criterios', 'expe', 'preguntas']);
 
         if ($request->has('cargo') && !empty($request->input('cargo'))) {
             $cargo = $request->input('cargo');
@@ -323,7 +371,7 @@ class OfertaController extends Controller
     public function getOfertaById($id)
     {
         $oferta = Oferta::where('id_oferta', $id)
-            ->with(['areas', 'criterios', 'expe','preguntas'])
+            ->with(['areas', 'criterios', 'expe', 'preguntas'])
             ->first();
 
         if (!$oferta) {
@@ -335,8 +383,10 @@ class OfertaController extends Controller
 
     public function getAllOfertas()
     {
-        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'expe', 'preguntas'])
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
             ->where('estado', 'En espera')
+            ->orderBy('dest', 'desc') // Ordena primero por 'dest' (1 primero)
+            ->orderBy('fecha_publi', 'desc') // Luego por 'fecha_publicacion' en caso de que no haya 'dest' = 1
             ->get();
 
         return response()->json(['ofertas' => $ofertas]);
@@ -344,7 +394,7 @@ class OfertaController extends Controller
 
     public function getOfertasInicio()
     {
-        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'expe', 'preguntas'])
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
             ->where('estado', 'En espera')
             ->orderBy('fecha_publi', 'desc')  // Ordena por la fecha de creación de forma descendente
             ->take(3)  // Limita a 3 ofertas
@@ -355,16 +405,27 @@ class OfertaController extends Controller
 
     // En tu controlador de ofertas
 
-public function actualizarEstadoOfertas()
+    public function actualizarEstadoOfertas()
+    {
+        // Obtén la fecha actual
+        $fechaActual = now(); // o puedes usar Carbon::now();
+
+        // Busca las ofertas cuya fecha máxima de postulación sea menor que hoy
+        $ofertasInactivas = Oferta::where('fecha_max_pos', '<', $fechaActual)
+            ->update(['estado' => 'Inactiva']);
+
+        return response()->json(['mensaje' => 'Estado de ofertas actualizadas', 'ofertas_inactivas' => $ofertasInactivas]);
+    }
+
+    public function getLatestDestacadas()
 {
-    // Obtén la fecha actual
-    $fechaActual = now(); // o puedes usar Carbon::now();
+    $ofertasDestacadas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
+        ->where('estado', 'En espera')
+        ->where('dest', 1)
+        ->orderBy('fecha_publi', 'desc')
+        ->take(3)
+        ->get();
 
-    // Busca las ofertas cuya fecha máxima de postulación sea menor que hoy
-    $ofertasInactivas = Oferta::where('fecha_max_pos', '<', $fechaActual)
-        ->update(['estado' => 'Inactiva']);
-
-    return response()->json(['mensaje' => 'Estado de ofertas actualizadas', 'ofertas_inactivas' => $ofertasInactivas]);
+    return response()->json(['ofertas' => $ofertasDestacadas]);
 }
-
 }
