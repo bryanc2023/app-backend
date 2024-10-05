@@ -99,8 +99,8 @@ class OfertaController extends Controller
         $oferta->exp_m = $validatedData['experienciaEnMeses'];
         $oferta->dest = $validatedData['destacada'];
         $oferta->ciudad = $validatedData['ciudad'];
-        $oferta->empre_p= $validatedData['empresa_p'];
-        $oferta->sector_p = $validatedData['sector_p'];
+        $oferta->empre_p = $validatedData['empresa_p'] ?? null;  // Handle null
+        $oferta->sector_p = $validatedData['sector_p'] ?? null; 
         $oferta->save();
 
         // Si 'destacada' es verdadero, incrementar la columna 'cantidad_dest'
@@ -232,8 +232,8 @@ class OfertaController extends Controller
             'exp_m' =>  $validatedData['experienciaEnMeses'],
             'dest' =>  $validatedData['destacada'],
             'ciudad' => $validatedData['ciudad'],
-            'empre_p' => $validatedData['empresa_p'],
-            'sector_p' => $validatedData['sector_p'],
+            'empre_p' => $validatedData['empresa_p']?? null,
+            'sector_p' => $validatedData['sector_p']?? null,
         ]);
 
          // Verificar si el valor anterior era true y ahora es false
