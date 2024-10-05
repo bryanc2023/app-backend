@@ -37,7 +37,11 @@ class Oferta extends Model
         'comentariosComisiones',
         'comentariosHorasExtras',
         'comentariosViaticos',
-        'exp_m'
+        'exp_m',
+        'dest',
+        'ciudad',
+        'empre_p',
+        'sector_p'
     ];
 
     // Relación con la tabla Empresa

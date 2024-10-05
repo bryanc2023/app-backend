@@ -21,6 +21,14 @@ class configuracion extends Model
         'valor_prioridad_baja',
         'vigencia',
         'terminos_condiciones',
+        'gratis_ofer',
+        'gratis_d',
+        'estandar_ofer',
+        'estandar_d',
+        'premium_ofer',
+        'premiun_d',
+        'u_ofer',
+        'u_d',
         
     ];
 

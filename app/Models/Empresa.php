@@ -23,7 +23,9 @@ class Empresa extends Model
         'tamanio',
         'descripcion',
         'logo',
-        'cantidad_empleados'
+        'cantidad_empleados',
+        'cantidad_dest',
+        'plan'
     ];
 
     public function usuario()
