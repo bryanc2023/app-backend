@@ -397,7 +397,7 @@ class OfertaController extends Controller
         $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
             ->where('estado', 'En espera')
             ->orderBy('fecha_publi', 'desc')  // Ordena por la fecha de creación de forma descendente
-            ->take(3)  // Limita a 3 ofertas
+            ->take(4)  // Limita a 3 ofertas
             ->get();
 
         return response()->json(['ofertas' => $ofertas]);
@@ -423,7 +423,7 @@ class OfertaController extends Controller
         ->where('estado', 'En espera')
         ->where('dest', 1)
         ->orderBy('fecha_publi', 'desc')
-        ->take(3)
+        ->take(4)
         ->get();
 
     return response()->json(['ofertas' => $ofertasDestacadas]);
