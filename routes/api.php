@@ -23,6 +23,7 @@ use App\Http\Controllers\CursoController;
 use App\Http\Controllers\EmpresaGestoraController;
 use App\Http\Controllers\NotificacionesController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use Illuminate\Support\Facades\Artisan;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -238,6 +239,11 @@ Route::put('/users/{id}/no-grant-access', [UserController::class, 'nograntAccess
 });
 Route::get('ofertaHome', [OfertaController::class, 'getOfertasInicio']);
 Route::get('/destacadas', [OfertaController::class, 'getLatestDestacadas']);
+
+Route::get('/ejecutar-ofertas-actualizar', function () {
+  Artisan::call('ofertas:actualizar-estado');
+  return 'Comando ejecutado.';
+});
 
 Route::middleware('auth:api')->group(function () {
   // Aquí van las rutas protegidas por JWT
