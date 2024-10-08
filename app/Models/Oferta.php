@@ -41,7 +41,8 @@ class Oferta extends Model
         'dest',
         'ciudad',
         'empre_p',
-        'sector_p'
+        'sector_p',
+        'personal_id'
     ];
 
     // Relación con la tabla Empresa
