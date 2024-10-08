@@ -228,7 +228,12 @@ Route::get('/first', [UserController::class, 'getFirstLoginDate']);
 
 
 Route::get('/criteriosAll', [CriterioController::class, 'index']);
+Route::post('/parteG', [EmpresaGestoraController::class, 'updateRole']);
+Route::get('/idGestora', [EmpresaGestoraController::class, 'getEmpresaByRoleId']);
+Route::get('/parteGestora', [EmpresaGestoraController::class, 'getPGestora']);
 
+Route::put('/users/{id}/grant-access', [UserController::class, 'grantAccess']);
+Route::put('/users/{id}/no-grant-access', [UserController::class, 'nograntAccess']);
 
 });
 Route::get('ofertaHome', [OfertaController::class, 'getOfertasInicio']);

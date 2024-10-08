@@ -58,9 +58,18 @@ class OfertaController extends Controller
             'ciudad' => 'nullable|string',
             'empresa_p' => 'nullable|string',
             'sector_p' => 'nullable|string',
+            'gestoraId' => 'nullable|integer',
         ]);
-        // Buscar el usuario por ID
-        $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
+        // Verificar si gestoraId es diferente a null
+        if (isset($validatedData['gestoraId']) && !is_null($validatedData['gestoraId'])) {
+            // Si gestoraId está presente y no es nulo, usarlo como el ID de la empresa
+            $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['gestoraId']);
+        } else {
+            // Si no hay gestoraId, buscar el usuario por ID normalmente
+            $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
+        }
+
+        // Verificar si se encontró el usuario o empresa
         if (!$user) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
@@ -100,7 +109,8 @@ class OfertaController extends Controller
         $oferta->dest = $validatedData['destacada'];
         $oferta->ciudad = $validatedData['ciudad'];
         $oferta->empre_p = $validatedData['empresa_p'] ?? null;  // Handle null
-        $oferta->sector_p = $validatedData['sector_p'] ?? null; 
+        $oferta->sector_p = $validatedData['sector_p'] ?? null;
+        $oferta->personal_id = $validatedData['gestoraId'] !== null ? $validatedData['usuario'] : null ?? null;
         $oferta->save();
 
         // Si 'destacada' es verdadero, incrementar la columna 'cantidad_dest'
@@ -194,16 +204,25 @@ class OfertaController extends Controller
             'usuario' => 'required|integer',
             'empresa_p' => 'nullable|string',
             'sector_p' => 'nullable|string',
+            'gestoraId' => 'nullable|integer',
         ]);
 
-        $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
+        // Verificar si gestoraId es diferente a null
+        if (isset($validatedData['gestoraId']) && !is_null($validatedData['gestoraId'])) {
+            // Si gestoraId está presente y no es nulo, usarlo como el ID de la empresa
+            $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['gestoraId']);
+        } else {
+            // Si no hay gestoraId, buscar el usuario por ID normalmente
+            $user = Empresa::getIdEmpresaPorIdUsuario($validatedData['usuario']);
+        }
+
+        // Verificar si se encontró el usuario o empresa
         if (!$user) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-
-         // Obtener el valor de 'dest' antes de actualizar
-    $wasDestacada = $oferta->dest;
+        // Obtener el valor de 'dest' antes de actualizar
+        $wasDestacada = $oferta->dest;
 
 
         // Actualizar la oferta con los datos validados
@@ -232,23 +251,24 @@ class OfertaController extends Controller
             'exp_m' =>  $validatedData['experienciaEnMeses'],
             'dest' =>  $validatedData['destacada'],
             'ciudad' => $validatedData['ciudad'],
-            'empre_p' => $validatedData['empresa_p']?? null,
-            'sector_p' => $validatedData['sector_p']?? null,
+            'empre_p' => $validatedData['empresa_p'] ?? null,
+            'sector_p' => $validatedData['sector_p'] ?? null,
+            'personal_id'=> $validatedData['gestoraId'] !== null ? $validatedData['usuario'] : null ?? null,
         ]);
 
-         // Verificar si el valor anterior era true y ahora es false
-    if ($wasDestacada && !$validatedData['destacada']) {
-        $empresa = Empresa::find($user);
-        $empresa->cantidad_dest = $empresa->cantidad_dest - 1; // Restar 1
-        $empresa->save();
-    }
+        // Verificar si el valor anterior era true y ahora es false
+        if ($wasDestacada && !$validatedData['destacada']) {
+            $empresa = Empresa::find($user);
+            $empresa->cantidad_dest = $empresa->cantidad_dest - 1; // Restar 1
+            $empresa->save();
+        }
 
-    // Si la nueva oferta es destacada y antes no lo era, sumar 1
-    if (!$wasDestacada && $validatedData['destacada']) {
-        $empresa = Empresa::find($user);
-        $empresa->cantidad_dest = $empresa->cantidad_dest + 1; // Incrementar en 1
-        $empresa->save();
-    }
+        // Si la nueva oferta es destacada y antes no lo era, sumar 1
+        if (!$wasDestacada && $validatedData['destacada']) {
+            $empresa = Empresa::find($user);
+            $empresa->cantidad_dest = $empresa->cantidad_dest + 1; // Incrementar en 1
+            $empresa->save();
+        }
 
         // Actualizar las relaciones (titulos y criterios) si se proporcionan
         if ($request->has('titulos')) {
@@ -383,7 +403,7 @@ class OfertaController extends Controller
 
     public function getAllOfertas()
     {
-        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
             ->where('estado', 'En espera')
             ->orderBy('dest', 'desc') // Ordena primero por 'dest' (1 primero)
             ->orderBy('fecha_publi', 'desc') // Luego por 'fecha_publicacion' en caso de que no haya 'dest' = 1
@@ -394,10 +414,10 @@ class OfertaController extends Controller
 
     public function getOfertasInicio()
     {
-        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
             ->where('estado', 'En espera')
             ->orderBy('fecha_publi', 'desc')  // Ordena por la fecha de creación de forma descendente
-            ->take(4)  // Limita a 3 ofertas
+            ->take(3)  // Limita a 3 ofertas
             ->get();
 
         return response()->json(['ofertas' => $ofertas]);
@@ -418,14 +438,14 @@ class OfertaController extends Controller
     }
 
     public function getLatestDestacadas()
-{
-    $ofertasDestacadas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion','empresa.sector', 'expe', 'preguntas'])
-        ->where('estado', 'En espera')
-        ->where('dest', 1)
-        ->orderBy('fecha_publi', 'desc')
-        ->take(4)
-        ->get();
+    {
+        $ofertasDestacadas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
+            ->where('estado', 'En espera')
+            ->where('dest', 1)
+            ->orderBy('fecha_publi', 'desc')
+            ->take(3)
+            ->get();
 
-    return response()->json(['ofertas' => $ofertasDestacadas]);
-}
+        return response()->json(['ofertas' => $ofertasDestacadas]);
+    }
 }

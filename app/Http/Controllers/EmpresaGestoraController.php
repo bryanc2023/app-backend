@@ -399,6 +399,61 @@ public function getOfertas(Request $request)
     return response()->json(['message' => 'Vigencia del criterio actualizada correctamente'], 200);
 }
 
+public function updateRole(Request $request)
+    {
+        // Validar la solicitud
+        $request->validate([
+            'usuario_id' => 'required|integer|exists:users,id',
+        ]);
 
+        try {
+            // Buscar el usuario por su ID
+            $user = User::find($request->input('usuario_id'));
+
+            // Actualizar el role_id del usuario a 0
+            $user->role_id = null;
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'El role_id del usuario ha sido actualizado a 0.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el role_id del usuario.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getEmpresaByRoleId()
+{
+    
+        // Obtén la empresa donde role_id sea 4
+        $empresa = User::where('role_id', 4)->first();
+
+        if (!$empresa) {
+            return response()->json(['error' => 'Empresa no encontrada'], 404);
+        }
+
+        // Devuelve solo el id de la empresa
+    return response()->json(['id' => $empresa->id], 200);
+    
+}
+
+public function getPGestora()
+{
+        // Obtén todos los usuarios donde role_id sea 5
+        $usuarios = User::where('role_id', 5)->get();
+
+        // Verifica si hay usuarios
+        if ($usuarios->isEmpty()) {
+            return response()->json(['error' => 'No se encontraron usuarios con este rol'], 404);
+        }
+
+        // Devuelve los usuarios en formato JSON
+        return response()->json($usuarios, 200);
+    }
     
 }
