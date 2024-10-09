@@ -404,7 +404,7 @@ class OfertaController extends Controller
     public function getAllOfertas()
     {
         $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
-            ->where('estado', 'En espera')
+            ->whereIn('estado', ['En espera', 'Inactiva'])
             ->orderBy('dest', 'desc') // Ordena primero por 'dest' (1 primero)
             ->orderBy('fecha_publi', 'desc') // Luego por 'fecha_publicacion' en caso de que no haya 'dest' = 1
             ->get();
@@ -415,9 +415,9 @@ class OfertaController extends Controller
     public function getOfertasInicio()
     {
         $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
-            ->where('estado', 'En espera')
+            ->whereIn('estado', ['En espera', 'Inactiva'])
             ->orderBy('fecha_publi', 'desc')  // Ordena por la fecha de creación de forma descendente
-            ->take(3)  // Limita a 3 ofertas
+            ->take(4)  // Limita a 3 ofertas
             ->get();
 
         return response()->json(['ofertas' => $ofertas]);
@@ -440,10 +440,10 @@ class OfertaController extends Controller
     public function getLatestDestacadas()
     {
         $ofertasDestacadas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
-            ->where('estado', 'En espera')
+            ->whereIn('estado', ['En espera', 'Inactiva'])
             ->where('dest', 1)
             ->orderBy('fecha_publi', 'desc')
-            ->take(3)
+            ->take(4)
             ->get();
 
         return response()->json(['ofertas' => $ofertasDestacadas]);
