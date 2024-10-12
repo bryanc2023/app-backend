@@ -111,7 +111,7 @@ return [
     |
     */
     'verify' => [
-        'redirect' => env('VERIFICATION_REDIRECT_URL', 'http://localhost:8000/api/email/verify'),
+        'redirect' => ('https://api-backend.postula.net/api/email/verify'),
     ],
 
     'password_timeout' => 10800,

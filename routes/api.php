@@ -23,6 +23,8 @@ use App\Http\Controllers\CursoController;
 use App\Http\Controllers\EmpresaGestoraController;
 use App\Http\Controllers\NotificacionesController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\CvController;
+use App\Http\Controllers\ImageController;
 use Illuminate\Support\Facades\Artisan;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -53,6 +55,8 @@ Route::middleware(['jwt.verify'])->get('users',[UserController::class,'index']);
 
 Route::middleware(['jwt.verify'])->group(function () {
 //Rutas para usuario
+
+Route::post('/download-cvs', [CvController::class, 'downloadCVs']);
 Route::get('userById/{id}', [UserController::class, 'getUserById']);
 
 //Rutas para certificados
@@ -140,7 +144,7 @@ Route::get('postulanteId/id',[PostulanteController::class,'obtenerIdPostulante']
 Route::post('postulante/forma',[PostulanteController::class,'registroFormaAca']);
 Route::get('/perfil/{id}', [PostulanteController::class, 'getPerfil']);
 Route::get('/curri/{id}', [PostulanteController::class, 'getCurriculum']);
-Route::put('/postulantes/{userId}/cv', [PostulanteController::class, 'updateCV']);
+Route::post('/postulantes/{userId}/cv', [PostulanteController::class, 'updateCV']);
 Route::get('check-cv/{id_postulante}', [PostulanteController::class, 'checkCv']);
 Route::get('/foto/{userId}', [PostulanteController::class, 'getProfileImage']);
 Route::post('/exp', [PostulanteController::class, 'agregarExperiencia']);
@@ -239,6 +243,10 @@ Route::put('/users/{id}/no-grant-access', [UserController::class, 'nograntAccess
 });
 Route::get('ofertaHome', [OfertaController::class, 'getOfertasInicio']);
 Route::get('/destacadas', [OfertaController::class, 'getLatestDestacadas']);
+Route::get('/images/{filename}', [ImageController::class, 'show']);
+Route::get('/postulantes/{userId}/cv/download', [CvController::class, 'downloadCV']);
+Route::get('/postulantes/{userId}/cv/show', [CvController::class, 'showCV']);
+Route::get('/cv/{filename}', [CvController::class, 'show']);
 
 Route::get('/ejecutar-ofertas-actualizar', function () {
   Artisan::call('ofertas:actualizar-estado');

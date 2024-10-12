@@ -48,9 +48,25 @@ class PostulanteController extends Controller
         $postulante->cedula = $request->idNumber;
         $postulante->genero = $request->gender;
         $postulante->informacion_extra = $request->description;
-        $postulante->foto = $request->foto; // URL de Firebase para la foto
-        $postulante->cv = $request->cv; // URL de Firebase para el CV
         $postulante->telefono = $request->telefono;
+        if ($request->hasFile('foto')) {
+            $image = $request->file('foto');
+
+            // Verifica que el archivo sea una imagen
+            if ($image->isValid()) {
+                $imageName = time() . '_' . $request->firstName . '_' . $request->usuario_id . '.' . $image->getClientOriginalExtension(); // Renombrar la imagen
+               // Guardar la ruta
+                $image->storeAs('images/postulantes', $imageName, 'public');
+             $image->move(public_path('storage/images/postulantes'), $imageName);
+
+                // Actualizar la ruta de la imagen en el modelo
+                $postulante->foto = 'https://api-backend.postula.net/storage/images/postulantes/' . $imageName;
+            } else {
+                return response()->json(['message' => 'El archivo no es una imagen válida.'], 422);
+            }
+        } else {
+            $postulante->foto = 'https://api-backend.postula.net/storage/images/postulantes/default.jpg';
+        }
 
 
         // Actualizar el campo first_login_at del usuario
@@ -707,11 +723,11 @@ class PostulanteController extends Controller
     public function updateCV($userId, Request $request)
     {
         // Validar y obtener el URL del CV desde el request
+        // Validar que el archivo CV esté presente
         $request->validate([
-            'cv' => 'required|string', // Asegúrate de validar que el CV sea una URL válida
+            'cv' => 'required|file|mimes:pdf',
+            'url' => 'required|string' // Asegúrate de que sea un archivo PDF
         ]);
-
-        $cvUrl = $request->input('cv');
 
         // Obtén el postulante por el id_usuario
         $postulante = Postulante::where('id_usuario', $userId)->first();
@@ -720,8 +736,19 @@ class PostulanteController extends Controller
             return response()->json(['error' => 'No se encontró el postulante.'], 404);
         }
 
-        // Actualizar el campo cv del postulante con la nueva URL
-        $postulante->cv = $cvUrl;
+        // Manejar la subida del archivo
+        if ($request->hasFile('cv')) {
+            $file = $request->file('cv');
+            $fileName = $file->getClientOriginalName(); // Obtiene el nombre original del archivo
+            $path = $file->storeAs('cv', $fileName, 'public'); // Guardar en storage/app/public/cv (sobrescribirá si existe)
+            $file->move(public_path('storage/cv'), $file);
+
+            // Actualizar la ruta de la imagen en el modelo
+            $postulante->cv = 'https://api-backend.postula.net/storage/cv/' . $file; 
+            // Actualizar la URL del CV en el postulante
+            $postulante->cv = $request->url . 'cv/' . $fileName; // Guardar la ruta en la base de datos
+        }
+
         $postulante->save();
 
         return response()->json(['message' => 'CV actualizado correctamente.', 'postulante' => $postulante], 200);
@@ -828,9 +855,9 @@ class PostulanteController extends Controller
 
     public function updateProfilePicture(Request $request, $id_Postulante)
     {
-        // Validar que la URL de la foto esté presente en la solicitud
+        // Validar que se envíe una foto
         $request->validate([
-            'foto' => 'required|string',
+            'foto' => 'required|image', // Asegúrate de que sea una imagen
         ]);
 
         // Obtener el postulante por el id_postulante
@@ -840,12 +867,47 @@ class PostulanteController extends Controller
             return response()->json(['error' => 'No se encontró el postulante.'], 404);
         }
 
-        // Actualizar el campo foto del postulante con la nueva URL
-        $postulante->foto = $request->input('foto');
+        // Verificar si el postulante ya tiene una foto anterior
+        // Verificar si el postulante ya tiene una foto anterior
+        $previousPhotoPath = $postulante->foto && $postulante->foto !== 'images/postulantes/default.jpg'
+            ? public_path($postulante->foto)
+            : null;
+
+        // Subir la nueva imagen con el mismo nombre o generar un nuevo nombre
+        if ($request->hasFile('foto')) {
+            $image = $request->file('foto');
+
+            // Verifica que el archivo sea una imagen
+            if ($image->isValid()) {
+                // Obtener el nombre de la imagen desde el postulante
+                $imageName = basename($previousPhotoPath); // Extraer solo el nombre del archivo
+
+                // Si hay una foto previa, eliminarla
+                if (!$previousPhotoPath || $postulante->foto ===  $request->url .'images/postulantes/default.jpg') {
+                    // Generar un nombre único para la nueva imagen
+                    $imageName = time() . '_' . $request->image_name; // Puede usar `time()` o cualquier otra lógica para crear un nombre único
+                } else {
+                    // Si hay una foto previa válida, extraer su nombre
+                    $imageName = basename($previousPhotoPath);
+                }
+
+                // Guardar la nueva imagen usando el nombre del postulante
+                $image->storeAs('images/postulantes', $imageName, 'public');
+                $image->move(public_path('storage/images/postulantes'), $imageName);
+
+                // Actualizar la ruta de la imagen en el modelo
+                $postulante->foto = 'https://api-backend.postula.net/storage/images/postulantes/' . $imageName; // Guardar la nueva ruta
+            } else {
+                return response()->json(['message' => 'El archivo no es una imagen válida.'], 422);
+            }
+        }
+
+        // Guardar cambios en el modelo
         $postulante->save();
 
         return response()->json(['message' => 'Foto de perfil actualizada correctamente.', 'postulante' => $postulante], 200);
     }
+
 
     public function updateProfile()
     {
