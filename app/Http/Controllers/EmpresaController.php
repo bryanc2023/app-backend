@@ -40,24 +40,36 @@ class EmpresaController extends Controller
         $empresa->descripcion = $request->description;
         $empresa->cantidad_empleados = $request->numberOfEmployees;
 
-        // Asumir que el frontend ya subió el logo a Firebase y solo recibe la URL
-        if ($request->has('logo')) {
-            $empresa->logo = $request->input('logo');
+        if ($request->hasFile('logo')) {
+            $logo = $request->file('logo');
+    
+            // Verificar si el archivo es válido
+            if ($logo->isValid()) {
+                $logoName = time() . '_' . $request->companyName. '.'. $request->usuario_id. '.' . $logo->getClientOriginalExtension(); // Renombrar el archivo de logo
+                $logo->storeAs('images/logos', $logoName, 'public'); // Guardar el archivo en la carpeta 'public/images/logos'
+                $empresa->logo = $request->url.'images/logos/' . $logoName; // Guardar la ruta en la base de datos
+            } else {
+                return response()->json(['message' => 'El archivo del logo no es válido.'], 422);
+            }
+        } else {
+            // Si no se sube logo, asignar un logo por defecto
+            $empresa->logo = $request->url.'images/logos/default-empresa.jpg';
         }
-
+    
+        // Guardar la empresa en la base de datos
         $empresa->save();
 
         // Guardar los enlaces sociales si existen
-        $socialLinksData = $request->input('socialLinks');
-        if (!empty($socialLinksData)) {
-            foreach ($socialLinksData as $linkData) {
-                EmpresaRed::create([
-                    'nombre_red' => $linkData['platform'],
-                    'enlace' => $linkData['url'],
-                    'id_empresa' => $empresa->id_empresa,
-                ]);
-            }
+        $socialLinksData = json_decode($request->input('socialLinks'), true); // Asegurarse que esté decodificado
+    if (!empty($socialLinksData)) {
+        foreach ($socialLinksData as $linkData) {
+            EmpresaRed::create([
+                'nombre_red' => $linkData['platform'],
+                'enlace' => $linkData['url'],
+                'id_empresa' => $empresa->id_empresa,
+            ]);
         }
+    }
 
         if ($empresa->id_usuario) {
             $user = User::find($empresa->id_usuario);
@@ -253,11 +265,40 @@ class EmpresaController extends Controller
 
             // Validar la solicitud para asegurarse de que el logo está presente
             $request->validate([
-                'logo' => 'required|url'
+                'logo' => 'required|image', // Asegúrate de que sea una imagen
             ]);
 
-            // Actualizar el logo de la empresa con la URL proporcionada
-            $empresa->logo = $request->input('logo');
+
+            $previousPhotoPath = $empresa->logo && $empresa->logo !== 'images/logos/default-empresa.jpg'
+            ? public_path($empresa->logo)
+            : null;
+
+            if ($request->hasFile('logo')) {
+                $image = $request->file('logo');
+    
+                // Verifica que el archivo sea una imagen
+                if ($image->isValid()) {
+                    // Obtener el nombre de la imagen desde el postulante
+                    $imageName = basename($previousPhotoPath); // Extraer solo el nombre del archivo
+    
+                    // Si hay una foto previa, eliminarla
+                    if (!$previousPhotoPath || $empresa->logo ===  $request->url .'images/logos/default-empresa.jpg') {
+                        // Generar un nombre único para la nueva imagen
+                        $imageName = time() . '_' . $request->image_name; // Puede usar `time()` o cualquier otra lógica para crear un nombre único
+                    } else {
+                        // Si hay una foto previa válida, extraer su nombre
+                        $imageName = basename($previousPhotoPath);
+                    }
+    
+                    // Guardar la nueva imagen usando el nombre del postulante
+                    $image->storeAs('images/logos', $imageName, 'public');
+    
+                    // Actualizar la ruta de la imagen en el modelo
+                    $empresa->logo = $request->url . 'images/logos/' . $imageName; // Guardar la nueva ruta
+                } else {
+                    return response()->json(['message' => 'El archivo no es una imagen válida.'], 422);
+                }
+            }
             $empresa->save();
 
             return response()->json(['message' => 'Logo actualizado correctamente', 'empresa' => $empresa], 200);
