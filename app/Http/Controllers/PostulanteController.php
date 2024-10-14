@@ -7,6 +7,7 @@ use App\Models\FormacionPro;
 use App\Models\PersonaFormacionPro;
 use App\Models\Postulante;
 use App\Models\Postulante_Habilidad;
+use App\Models\PostulanteArea;
 use App\Models\PostulanteCompetencia;
 use App\Models\PostulanteIdioma;
 use App\Models\PostulanteRed;
@@ -55,9 +56,9 @@ class PostulanteController extends Controller
             // Verifica que el archivo sea una imagen
             if ($image->isValid()) {
                 $imageName = time() . '_' . $request->firstName . '_' . $request->usuario_id . '.' . $image->getClientOriginalExtension(); // Renombrar la imagen
-               // Guardar la ruta
+                // Guardar la ruta
                 $image->storeAs('images/postulantes', $imageName, 'public');
-             $image->move(public_path('storage/images/postulantes'), $imageName);
+                $image->move(public_path('storage/images/postulantes'), $imageName);
 
                 // Actualizar la ruta de la imagen en el modelo
                 $postulante->foto = 'https://api-backend.postula.net/storage/images/postulantes/' . $imageName;
@@ -744,7 +745,7 @@ class PostulanteController extends Controller
             $file->move(public_path('storage/cv'), $file);
 
             // Actualizar la ruta de la imagen en el modelo
-            $postulante->cv = 'https://api-backend.postula.net/storage/cv/' . $file; 
+            $postulante->cv = 'https://api-backend.postula.net/storage/cv/' . $file;
             // Actualizar la URL del CV en el postulante
             $postulante->cv = $request->url . 'cv/' . $fileName; // Guardar la ruta en la base de datos
         }
@@ -883,7 +884,7 @@ class PostulanteController extends Controller
                 $imageName = basename($previousPhotoPath); // Extraer solo el nombre del archivo
 
                 // Si hay una foto previa, eliminarla
-                if (!$previousPhotoPath || $postulante->foto ===  $request->url .'images/postulantes/default.jpg') {
+                if (!$previousPhotoPath || $postulante->foto ===  $request->url . 'images/postulantes/default.jpg') {
                     // Generar un nombre único para la nueva imagen
                     $imageName = time() . '_' . $request->image_name; // Puede usar `time()` o cualquier otra lógica para crear un nombre único
                 } else {
@@ -913,4 +914,47 @@ class PostulanteController extends Controller
     {
         return response()->json('xd');
     }
+
+    public function areaPos(Request $request)
+    {
+        // Validar los datos de entrada
+        $request->validate([
+            'id_postulante' => 'required|integer|exists:postulante,id_postulante',
+            'id_area' => 'required|integer',
+        ]);
+
+
+        $postulanteArea = PostulanteArea::create([
+            'id_postulante' => $request->id_postulante,
+            'id_area' => $request->id_area,
+            'fecha_creacion' => now(),
+        ]);
+
+        return response()->json(['message' => 'Notificació personalizada asignada exitosamente', 'data' => $postulanteArea], 201);
+    }
+    public function getPostulanteNoti($id_postulante)
+    {
+        $postulanteReds = PostulanteArea::with('area') // Cargar la relación con AreaTrabajo
+            ->where('id_postulante', $id_postulante)
+            ->get();
+
+        if ($postulanteReds->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron notificaciones para este postulante'], 404);
+        }
+
+        // Mapear los resultados para incluir el nombre del área
+        $result = $postulanteReds->map(function ($item) {
+            return [
+                'id_postulante' => $item->id_postulante,
+                'id_area' => $item->id_area,
+                'fecha_creacion' => $item->fecha_creacion,
+                'nombre_area' => $item->area->nombre_area, // Obtener el nombre del área
+            ];
+        });
+
+        return response()->json($result, 200);
+    }
+   
+
+    
 }

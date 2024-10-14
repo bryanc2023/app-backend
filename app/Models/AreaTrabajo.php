@@ -12,9 +12,18 @@ class AreaTrabajo extends Model
     protected $table = 'area_trabajo';
 
     protected $fillable = ['nombre_area', 'vigencia'];
+  
+   
 
     public function ofertas()
     {
         return $this->hasMany(Oferta::class, 'id_area');
     }
+
+    public function postulantes()
+{
+    return $this->belongsToMany(Postulante::class, 'postulante_area', 'id_area', 'id_postulante');
+               
+}
+
 }

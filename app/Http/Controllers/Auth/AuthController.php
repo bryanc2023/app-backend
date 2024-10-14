@@ -87,7 +87,7 @@ class AuthController extends Controller
 
         // Verificar si el email ha sido verificado
         if (!$user->hasVerifiedEmail()) {
-            return response()->json(['error' => 'Por favor, verifica tu correo electrónico primero'], 403);
+            return response()->json(['error' => 'Por favor, verifica tu correo electrónico primero'], 300);
         }
 
         // Inicializar la respuesta con los datos del usuario

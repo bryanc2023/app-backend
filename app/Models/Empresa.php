@@ -25,7 +25,11 @@ class Empresa extends Model
         'logo',
         'cantidad_empleados',
         'cantidad_dest',
-        'plan'
+        'plan',
+        'ruc',
+        'razon_s',
+        'sitio',
+        'telefono'
     ];
 
     public function usuario()

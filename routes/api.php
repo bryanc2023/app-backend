@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\HabilidadController;
+use App\Http\Controllers\PostulanteAreaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\NotificacionesController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\CvController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\PostulanteArea;
 use Illuminate\Support\Facades\Artisan;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -35,6 +37,7 @@ Route::get('/test-cors', function (Request $request) {
 });
 
 Route::prefix('auth')->group(function(){
+
   Route::post('register',[AuthController::class,'register']);
 
   Route::post('registerE',[AuthController::class,'registerEmpresa']);
@@ -239,6 +242,13 @@ Route::get('/parteGestora', [EmpresaGestoraController::class, 'getPGestora']);
 
 Route::put('/users/{id}/grant-access', [UserController::class, 'grantAccess']);
 Route::put('/users/{id}/no-grant-access', [UserController::class, 'nograntAccess']);
+Route::put('/reactivarO/{id}', [OfertaController::class, 'reactivarOferta']);
+Route::put('/ofertas/{id}/ocultar', [OfertaController::class, 'ocultarOferta']);
+Route::get('/ofertasAd', [OfertaController::class, 'getAllOfertasAd']);
+Route::put('/ofertas/cambio-masivo', [OfertaController::class, 'cambioMasivo'])->name('ofertas.cambioMasivo');
+Route::post('/notifica-a', [PostulanteController::class, 'areaPos']);
+Route::get('postulante-noti/{id_postulante}', [PostulanteController::class, 'getPostulanteNoti']);
+Route::delete('/notify/{id_area}/{id_postulante}', [PostulanteAreaController::class, 'deleteNoti']);
 
 });
 Route::get('ofertaHome', [OfertaController::class, 'getOfertasInicio']);
