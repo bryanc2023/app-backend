@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendOfertaPublicadaEmail;
+use App\Mail\OfertaPublicadaMail;
 use App\Models\CriterioOferta;
 use App\Models\EducacionRequerida;
 use App\Models\Empresa;
@@ -11,6 +13,11 @@ use App\Models\Ubicacion;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use App\Mail\OfertaPublicada;
+use App\Models\Postulante;
+use App\Models\PostulanteArea;
+use Illuminate\Support\Facades\Mail;
 
 class OfertaController extends Controller
 {
@@ -113,6 +120,8 @@ class OfertaController extends Controller
         $oferta->personal_id = $validatedData['gestoraId'] !== null ? $validatedData['usuario'] : null ?? null;
         $oferta->save();
 
+        
+
         // Si 'destacada' es verdadero, incrementar la columna 'cantidad_dest'
         if ($validatedData['destacada']) {
             $empresa = Empresa::find($user);
@@ -153,8 +162,10 @@ class OfertaController extends Controller
             }
         }
 
-
+// Despachar el trabajo para enviar el correo
+SendOfertaPublicadaEmail::dispatch($oferta);
         return response()->json(['message' => 'Oferta creado exitosamente', 'oferta' => $oferta], 201);
+        
     }
 
     public function updateOferta(Request $request, $id)
@@ -253,7 +264,7 @@ class OfertaController extends Controller
             'ciudad' => $validatedData['ciudad'],
             'empre_p' => $validatedData['empresa_p'] ?? null,
             'sector_p' => $validatedData['sector_p'] ?? null,
-            'personal_id'=> $validatedData['gestoraId'] !== null ? $validatedData['usuario'] : null ?? null,
+            'personal_id' => $validatedData['gestoraId'] !== null ? $validatedData['usuario'] : null ?? null,
         ]);
 
         // Verificar si el valor anterior era true y ahora es false
@@ -432,6 +443,7 @@ class OfertaController extends Controller
 
         // Busca las ofertas cuya fecha máxima de postulación sea menor que hoy
         $ofertasInactivas = Oferta::where('fecha_max_pos', '<', $fechaActual)
+            ->where('estado', '!=','Culminada')
             ->update(['estado' => 'Inactiva']);
 
         return response()->json(['mensaje' => 'Estado de ofertas actualizadas', 'ofertas_inactivas' => $ofertasInactivas]);
@@ -448,4 +460,71 @@ class OfertaController extends Controller
 
         return response()->json(['ofertas' => $ofertasDestacadas]);
     }
+
+    public function reactivarOferta(Request $request, $id)
+    {
+        // Validar que se envíe una fecha mínima
+        $request->validate([
+            'fecha_max_pos' => 'required|date|after_or_equal:today',
+        ]);
+
+        // Buscar la oferta por ID
+        $oferta = Oferta::find($id);
+        if (!$oferta) {
+            return response()->json(['error' => 'Oferta no encontrada'], 404);
+        }
+
+        // Actualizar los campos de la oferta
+        $oferta->fecha_publi = now(); // Establece la fecha de publicación a hoy
+        $oferta->fecha_max_pos = $request->fecha_max_pos; // Establece la fecha máxima de postulación
+        $oferta->estado = 'En espera'; // Cambia el estado a "En espera"
+
+        // Guardar los cambios en la base de datos
+        $oferta->save();
+
+        return response()->json(['message' => 'Oferta reactivada exitosamente']);
+    }
+
+    public function ocultarOferta($id)
+    {
+        $oferta = Oferta::find($id);
+        
+        if (!$oferta) {
+            return response()->json(['error' => 'Oferta no encontrada.'], 404);
+        }
+
+        $oferta->estado = 'Oculta';  // Cambia el estado de la oferta a 'oculta'
+        $oferta->save();
+
+        return response()->json(['message' => 'Oferta oculta exitosamente.']);
+    }
+
+    public function getAllOfertasAd()
+    {
+        $ofertas = Oferta::with(['areas', 'criterios', 'empresa.ubicacion', 'empresa.sector', 'expe', 'preguntas'])
+            ->orderBy('dest', 'desc') // Ordena primero por 'dest' (1 primero)
+            ->orderBy('fecha_publi', 'desc') // Luego por 'fecha_publicacion' en caso de que no haya 'dest' = 1
+            ->get();
+
+        return response()->json(['ofertas' => $ofertas]);
+    }
+
+    public function cambioMasivo(Request $request)
+    {
+      
+
+        $fechaInput = $request->fecha;
+
+        // Cambiar el estado de las ofertas
+        $ofertasInactivas = Oferta::where('fecha_publi', '<', $fechaInput)
+        ->whereNotIn('estado', ['Inactiva', 'Culminada'])
+        ->update(['estado' => 'Oculta']);
+
+        return response()->json([
+            'message' => 'Las ofertas han sido actualizadas exitosamente.',
+            'ofertas_actualizadas' => $ofertasInactivas
+        ], 200);
+    }
+
+  
 }

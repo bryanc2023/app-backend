@@ -39,6 +39,10 @@ class EmpresaController extends Controller
         $empresa->tamanio = $this->calcularTamano($numberOfEmployees);
         $empresa->descripcion = $request->description;
         $empresa->cantidad_empleados = $request->numberOfEmployees;
+        $empresa->ruc = $request->ruc;
+        $empresa->razon_s = $request->razon_s;
+        $empresa->sitio = $request->sitio;
+        $empresa->telefono = $request->telefono;
 
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
@@ -136,6 +140,10 @@ class EmpresaController extends Controller
             $empresa->cantidad_empleados = $request->input('cantidad_empleados', $empresa->cantidad_empleados);
             $empresa->tamanio = $this->calcularTamano($empresa->cantidad_empleados);
 
+            $empresa->ruc = $request->input('ruc', $empresa->ruc);
+            $empresa->razon_s = $request->input('razon_s', $empresa->razon_s);
+            $empresa->sitio = $request->input('sitio', $empresa->sitio);
+            $empresa->telefono = $request->input('telefono', $empresa->telefono);
             // Asumir que el frontend ya subió el logo a Firebase y solo recibe la URL
             if ($request->has('logo')) {
                 $empresa->logo = $request->input('logo');

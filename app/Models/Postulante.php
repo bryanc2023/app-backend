@@ -111,4 +111,19 @@ class Postulante extends Model
     {
         return !is_null($this->cv) && $this->cv !== '';
     }
+
+    public function areasp()
+{
+    
+    return $this->belongsToMany(AreaTrabajo::class, 'postulante_area', 'id_postulante', 'id_area'); // Para usar los timestamps si los necesitas
+}
+
+public function areas()
+{
+    return $this->hasMany(PostulanteArea::class, 'id_postulante');
+
+    
+}
+
+
 }
